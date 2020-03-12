@@ -7,6 +7,7 @@
 		// use local .oh-my-zsh configuration if it exists (overwriting one in container).
 		// comment the following line out if you want to use local installation on container instead
 		"-v", "${env:HOME}/.oh-my-zsh:/home/jboss/.oh-my-zsh",
+		"-v", "${env:HOME}/.helm:/home/jboss/.helm",
 		"-e", "AWS_PROFILE=redhat"
 		//"AWS_PROFILE=${env:AWS_PROFILE}"
 	],
