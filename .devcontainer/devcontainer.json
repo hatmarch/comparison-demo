@@ -1,5 +1,5 @@
 {
-	"name": "Debezium CDC Demo",
+	"name": "Comparison Demo",
 	"dockerFile": "Dockerfile",
 	"runArgs": [
 		"-v", "${env:HOME}/.aws:/home/jboss/.aws",
@@ -14,6 +14,6 @@
 		"humao.rest-client"
 	],
 	"settings":{
-		"java.home": "/usr/lib/jvm/java-1.8.0-openjdk"
+		"terminal.integrated.shell.linux": "/bin/zsh"
 	}
 }
