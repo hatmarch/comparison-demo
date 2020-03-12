@@ -3,6 +3,7 @@
 	"dockerFile": "Dockerfile",
 	"runArgs": [
 		"-v", "${env:HOME}/.aws:/home/jboss/.aws",
+		"-v", "${env:HOME}/.kube:/home/jboss/.kube",
 		"-e", "AWS_PROFILE=redhat"
 		//"AWS_PROFILE=${env:AWS_PROFILE}"
 	],
@@ -10,6 +11,7 @@
 		"vscjava.vscode-java-pack",
 		//"redhat.vscode-xml",
 		"joaompinto.asciidoctor-vscode",
+		"ms-kubernetes-tools.vscode-kubernetes-tools",
 		// REST CLIENT for querying elastic search
 		"humao.rest-client"
 	],
