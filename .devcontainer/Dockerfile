@@ -9,6 +9,7 @@ USER root
 RUN cd /usr/local/bin && \
     wget https://github.com/wercker/stern/releases/download/1.6.0/stern_linux_amd64 && \
     mv stern_linux_amd64 stern && chmod 755 stern && \
+
 # instal knative client
     wget -qO- https://mirror.openshift.com/pub/openshift-v4/clients/serverless/0.10.0/kn-linux-amd64-0.10.0.tar.gz | tar zxvf - -C /usr/local/bin && \
 # instal hey
@@ -19,7 +20,11 @@ RUN cd /usr/local/bin && \
 
 # install AWS cli
 RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && ./aws/install && rm awscliv2.zip && rm -rf ./aws \
+    unzip awscliv2.zip && ./aws/install && rm awscliv2.zip && rm -rf ./aws 
     # && ln -s /usr/local/bin/aws2 /usr/local/bin/aws
+
+# install helm
+RUN wget -qO- https://storage.googleapis.com/kubernetes-helm/helm-v2.12.2-linux-amd64.tar.gz | \
+  tar -xzvf - && mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64
 
 USER jboss
