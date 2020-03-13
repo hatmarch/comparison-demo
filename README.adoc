@@ -2,6 +2,11 @@
 
 == EB Environment ==
 
+_From helloworld-pipeline example link:https://medium.com/@xoor/deploying-a-node-js-app-to-aws-elastic-beanstalk-681fa88bac53[here]_
+
+Run the following script and answer the prompts as per the link above
+
+
 == AWS Pipeline ==
 
 _From helloworld-pipeline example link:https://medium.com/@xoor/using-aws-codepipeline-to-automate-deployments-to-elasticbeanstalk-e80ca988ef70[here]_
