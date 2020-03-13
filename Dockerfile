@@ -21,28 +21,23 @@ RUN yum group install -y "Development Tools" && \
 
 RUN subscription-manager unregister
 
-# necessary for the way the installer works that it goes to root's home directory (otherwise this is jboss home)
-ENV HOME=/root
 USER root
 
-# clone the eb cli installation repo and run installer as root (doesn't work as local user)
-# do this in two stages so that we can specify the installation directory
+# clone the eb cli installation repo and run installer as root (doesn't work as local user and 
+# though it isn't recommended to use sudo under docker build, it only installs correctly when 
+# executing the command via sudo
+# We run the installation command in two stages so that we can specify the installation directory
+# see also: https://github.com/aws/aws-elastic-beanstalk-cli-setup#3-advanced-use
 RUN cd /tmp && git clone https://github.com/aws/aws-elastic-beanstalk-cli-setup.git && \
-    sudo ./aws-elastic-beanstalk-cli-setup/scripts/python_installer \
-    && echo 'export PATH="/root/.pyenv/versions/3.7.2/bin:$PATH"' >> /root/.bash_profile && source /root/.bash_profile
+    sudo ./aws-elastic-beanstalk-cli-setup/scripts/python_installer 
 
 ENV PATH="/root/.pyenv/versions/3.7.2/bin:$PATH"
-RUN ln -s /root/.pyenv/versions/3.7.2/bin/virtualenv /usr/bin/
 
-RUN sudo echo "path is $PATH" && sudo python /tmp/aws-elastic-beanstalk-cli-setup/scripts/ebcli_installer.py --location /usr/local/lib/ebcli \
-    && echo 'export PATH="/usr/local/lib/ebcli/.ebcli-virtual-env/executables:$PATH"' >> ~/.bash_profile && source ~/.bash_profile \
-    && rm -rf /tmp/aws-elastic-beanstalk-cli-setup/
+RUN ln -s /root/.pyenv/versions/3.7.2/bin/virtualenv /usr/bin/ \
+    && sudo echo "path is $PATH" && sudo python /tmp/aws-elastic-beanstalk-cli-setup/scripts/ebcli_installer.py --location /usr/local/lib/ebcli \
+    && rm -rf /tmp/aws-elastic-beanstalk-cli-setup && rm /usr/bin/virtualenv
 
 USER jboss
 
-# reset the home directory
-ENV HOME=/home/jboss
-
-# put the cli in our path
-RUN echo 'export PATH="/usr/local/lib/ebcli/.ebcli-virtual-env/executables:$PATH"' >> ~/.zshenv && source ~/.zshenv
+ENV PATH="/usr/local/lib/ebcli/.ebcli-virtual-env/executables:$PATH"
 
