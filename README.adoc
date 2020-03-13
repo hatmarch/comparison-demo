@@ -8,6 +8,30 @@ Run the following script and answer the prompts as per the link above
 
 NOTE: When using eb deploy it appears you must first *commit* (but not push) into the (local) git repo that is referenced in the .git of the folder that you eb initialized in.  The branch it looks to is in .elasticbeanstalk/config.yml.
 
+== Connecting to existing EB Environment with CLI ==
+
+NOTE: See information on link:https://stackoverflow.com/questions/28821632/how-to-configure-eb-cli-with-eb-env-that-is-already-running[this page here].
+
+1. Change to the directory with the git repo that is deployed to eb
+2. run `eb init --profile $AWS_PROFILE`
+3. Select the application you want to use
+
+== Saving a configuration with the CLI ==
+
+As long as you have <<Connecting to existing EB Environment with CLI,linked an EB application to the CLI>> you can download a configuration using the EB CLI eb config command, as shown in the following example. NAME is the name of your saved configuration.
+
+----
+$ eb config get PetClinic3
+
+Configuration saved at: /workspaces/comparison-demo/spring-framework-petclinic/.elasticbeanstalk/saved_configs/PetClinic3.cfg.yml
+----
+
+To get a list of configurations, run
+
+----
+eb config list
+----
+
 == AWS Pipeline ==
 
 _From helloworld-pipeline example link:https://medium.com/@xoor/using-aws-codepipeline-to-automate-deployments-to-elasticbeanstalk-e80ca988ef70[here]_
