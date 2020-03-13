@@ -6,6 +6,7 @@ _From helloworld-pipeline example link:https://medium.com/@xoor/deploying-a-node
 
 Run the following script and answer the prompts as per the link above
 
+NOTE: When using eb deploy it appears you must first *commit* (but not push) into the (local) git repo that is referenced in the .git of the folder that you eb initialized in.  The branch it looks to is in .elasticbeanstalk/config.yml.
 
 == AWS Pipeline ==
 
