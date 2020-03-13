@@ -1,2 +1,24 @@
 = Comparison Demo: AWS and Openshift =
 
+== EB Environment ==
+
+== AWS Pipeline ==
+
+_From helloworld-pipeline example link:https://medium.com/@xoor/using-aws-codepipeline-to-automate-deployments-to-elasticbeanstalk-e80ca988ef70[here]_
+
+First create and name the pipeline
+
+* be sure to create a servicerole
+
+Then select your source (GitHub) in this case
+
+== AWS Code Commit ==
+
+First, be sure to setup your access following instructions link:https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up.html[here].
+
+* Add CodeCommitPowerUser policy to your IAM user
+* generate a code commit keypair (see link:https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-ssh-unixes.html[Step 3 of this document] for more details on creating a keypair)
+* Create a CodeCommit repo
+* Copy the SSH key
+
+== AWS Code Deploy Agent ==

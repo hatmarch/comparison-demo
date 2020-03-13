@@ -1,4 +1,4 @@
-FROM quay.io/mhildenb/cloudnative-workspaces-quarkus:1.0
+FROM quay.io/mhildenb/comparison-demo-base:1.0
 
 # NOTE: If you need to run yum to install anything, you'll need to register the RHEL container using docker BUILDKIT to pass secrets
 # If this is not supported by VSCode Remote, then you'll need to create a new base image outside of vscode / .devcontainer and make that image
@@ -27,4 +27,22 @@ RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o 
 RUN wget -qO- https://storage.googleapis.com/kubernetes-helm/helm-v2.12.2-linux-amd64.tar.gz | \
   tar -xzvf - && mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64
 
+
+# clone the eb cli installation repo and run installer as root (doesn't work as local user and 
+# though it isn't recommended to use sudo under docker build, it only installs correctly when 
+# executing the command via sudo
+# We run the installation command in two stages so that we can specify the installation directory
+# see also: https://github.com/aws/aws-elastic-beanstalk-cli-setup#3-advanced-use
+RUN cd /tmp && git clone https://github.com/aws/aws-elastic-beanstalk-cli-setup.git && \
+    sudo ./aws-elastic-beanstalk-cli-setup/scripts/python_installer 
+
+ENV PATH="/root/.pyenv/versions/3.7.2/bin:$PATH"
+
+RUN ln -s /root/.pyenv/versions/3.7.2/bin/virtualenv /usr/bin/ \
+    && sudo echo "path is $PATH" && sudo python /tmp/aws-elastic-beanstalk-cli-setup/scripts/ebcli_installer.py --location /usr/local/lib/ebcli \
+    && rm -rf /tmp/aws-elastic-beanstalk-cli-setup && rm /usr/bin/virtualenv
+
+ENV PATH="/usr/local/lib/ebcli/.ebcli-virtual-env/executables:$PATH"
+
 USER jboss
+
