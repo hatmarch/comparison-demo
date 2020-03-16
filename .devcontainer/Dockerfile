@@ -35,6 +35,10 @@ RUN wget -qO- https://storage.googleapis.com/kubernetes-helm/helm-v2.12.2-linux-
 RUN cd /tmp && git clone https://github.com/aws/aws-elastic-beanstalk-cli-setup.git && \
     sudo ./aws-elastic-beanstalk-cli-setup/scripts/python_installer 
 
+# Install a newer version of the tekton CLI (earlier base images have 0.4.0)
+RUN curl -L https://github.com/tektoncd/cli/releases/download/v0.8.0/tkn_0.8.0_Linux_x86_64.tar.gz | \
+    tar -xvzf - -C /usr/local/bin/ tkn && chmod 755 /usr/local/bin/tkn
+
 ENV PATH="/root/.pyenv/versions/3.7.2/bin:$PATH"
 
 RUN ln -s /root/.pyenv/versions/3.7.2/bin/virtualenv /usr/bin/ \
