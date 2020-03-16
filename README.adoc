@@ -32,6 +32,46 @@ To get a list of configurations, run
 eb config list
 ----
 
+== Updating a configuration with the CLI ==
+
+Once you have <<Saving a configuration with the CLI,downloaded a configuration>> you can edit that configuration locally and then update it.
+
+1. First open your configuration file that you downloaded previously (e.g. `.elasticbeanstalk/saved_configs/PetClinic3.cfg.yml`)
+
+** for example, change the description of the configuration
+
+2. Run `eb config put .elasticbeanstalk/saved_configs/PetClinic3.cfg.yml`
+
+3. To apply the configuration, open the console (`eb console` or `eb console -debug` when in a container to get the command to print out the EB console URL)
+
+== Create from a configuration ==
+
+NOTE: For more information on the create command see link:https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-create.html[here]
+
+If you have a valid configuration file, you can use it to create a new environment with the `eb create` command
+
+For example, to use a (local or saved) cfg.yml file named `PetClinic3`
+
+----
+$ eb create petclinic-clone --cfg PetClinic3
+Creating application version archive "app-200313_080552".
+Uploading petclinic-3/app-200313_080552.zip to S3. This may take a while.
+Upload Complete.
+Environment details for: petclinic-clone
+  Application name: petclinic-3
+  Region: ap-southeast-2
+  Deployed Version: app-200313_080552
+  Environment ID: e-qmxmyjbqr7
+  Platform: arn:aws:elasticbeanstalk:ap-southeast-2::platform/Tomcat 8.5 with Java 8 running on 64bit Amazon Linux/3.3.3
+  Tier: WebServer-Standard-1.0
+  CNAME: UNKNOWN
+  Updated: 2020-03-13 08:05:58.808000+00:00
+Printing Status:
+2020-03-13 08:05:57    INFO    createEnvironment is starting.
+...
+
+----
+
 == AWS Pipeline ==
 
 _From helloworld-pipeline example link:https://medium.com/@xoor/using-aws-codepipeline-to-automate-deployments-to-elasticbeanstalk-e80ca988ef70[here]_
