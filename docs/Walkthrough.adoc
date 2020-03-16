@@ -1,0 +1,59 @@
+= Comparison Walkthrough =
+
+== Local creation ==
+
+Show our demo running locally 
+For ease, this will be running in two containers on my local laptop
+POTENTIALLY: Loop around to show CRC running on local laptop?
+
+== Development Environment Creation ==
+
+How to get our application deployed to Dev
+
+=== AWS ===
+Show how ElasticBeanstalk provisions multiple VM with RDS
+
+Show LoadBalancers and reference Route53
+
+
+=== OpenShift ===
+Show MySQL operator and then CR for provisioning of database
+Show Template for creating a tomcat app
+S2I
+
+How Services and replicasets are an analog to Load Balancers and ASG
+
+NOTE: AZ vs. Nodes
+
+== Continuous Integration ==
+
+Show that checking into a git repo can trigger integration chain and deployment to dev
+
+=== AWS ===
+Show CodeDeploy with EB
+
+=== Openshift ===
+Show Tekton (OpenShift Pipeline) or Jenkins with Openshift
+
+== Production Environments ==
+
+Show how we create additional environments and update pipeline to be able to deploy into these
+
+=== AWS ===
+ Show creation of staging and production environment in EB
+
+=== OpenShift ===
+
+Show creation of staging and production projects in OS
+
+== Monitoring Application ==
+
+=== AWS ===
+
+CloudWatch
+
+=== OpenShift ===
+
+See link:https://medium.com/logistimo-engineering-blog/tomcat-jvm-metrics-monitoring-using-prometheus-in-kubernetes-c313075af727[here] for getting information into Prometheus 
+
+== Debugging Application ==
