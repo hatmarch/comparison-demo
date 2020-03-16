@@ -1,5 +1,7 @@
 = Comparison Walkthrough =
 
+Premise: You have a (petclinic) spring application that you need to  host in the cloud.  Let’s look at how different facets of this are done in AWS and then in OpenShift
+
 == Local creation ==
 
 Show our demo running locally 
