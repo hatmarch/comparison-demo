@@ -1,5 +1,62 @@
 = Comparison Demo: AWS and Openshift =
 
+== MySQL Operator ==
+
+See information link:https://blogs.oracle.com/developers/introducing-the-oracle-mysql-operator-for-kubernetes[here] for the operator (which can be found link:https://github.com/oracle/mysql-operator[here])
+
+First install the operator
+
+Then install an agent in the project where you want to install the cluster
+
+----
+oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-agent.yaml
+----
+
+Then install an instance of a MySQL Cluster
+
+----
+oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-cluster-instance.yaml
+----
+
+Get the password of the cluster, assuming the cluster is named `jws-app-mysql` (running this command in the project in which it is installed):
+
+----
+oc get secret jws-app-mysql-root-password -o jsonpath="{.data.password}" | base64 --decode
+----
+
+Then you can connect to it using Adminer
+
+----
+oc port-forward svc/jws-app-mysql 3306:3306
+docker run -p 8080:8080 -e ADMINER_DEFAULT_SERVER=docker.for.mac.localhost adminer:latest
+----
+
+Login as root (using the secret above) and run these commands (from link:https://linuxize.com/post/how-to-create-mysql-user-accounts-and-grant-privileges/[here])
+
+----
+CREATE USER 'pc'@'%' IDENTIFIED BY 'petclinic';
+
+[red]#FIXME: Grant permissions to whole database or make the petclinic db and grant permissions to it#
+----
+
+=== Troubleshooting ===
+
+==== Cluster fails to appear ====
+
+Check the logs of the mysql-operator pod in the mysql-operator project
+
+----
+oc logs deployment/mysql-operator -n mysql-operator -f
+----
+
+One known issue is that you can't make your clustername too long:
+
+----
+E0317 07:08:48.666574       1 controller.go:291] error syncing 'test-petclinic4/mysql-cluster-with-3-replicas': validating Cluster: metadata.name: Invalid value: "mysql-cluster-with-3-replicas": longer than maximum supported length 28 (see: https://bugs.mysql.com/bug.php?id=90601)
+----
+
+
+
 == EB Environment ==
 
 _From helloworld-pipeline example link:https://medium.com/@xoor/deploying-a-node-js-app-to-aws-elastic-beanstalk-681fa88bac53[here]_

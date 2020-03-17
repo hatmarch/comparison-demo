@@ -1,0 +1,6 @@
+apiVersion: "mysql.oracle.com/v1alpha1"
+kind: Cluster
+metadata:
+  name: jws-app-mysql
+spec:
+  replicas: 3
