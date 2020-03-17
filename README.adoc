@@ -6,10 +6,13 @@ See information link:https://blogs.oracle.com/developers/introducing-the-oracle-
 
 First install the operator
 
-Then install an agent in the project where you want to install the cluster
+Then install an agent in the project where you want to install the cluster.  
+
+NOTE: For OpenShift, it appears the mysql instances need elevated permissions so the mysql-agent needs anyuid scc
 
 ----
 oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-agent.yaml
+oc adm policy add-scc-to-user anyuid -z mysql-agent 
 ----
 
 Then install an instance of a MySQL Cluster
