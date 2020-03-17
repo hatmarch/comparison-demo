@@ -4,9 +4,7 @@
 
 [TODO]
 ====
-1. Trigger pipeline with git repo change (see tutorial?)
-1. Nexus repo to make compilation faster?
-  see example link:https://github.com/siamaksade/tekton-cd-demo/blob/master/cd/nexus.yaml[here]
+1. Trigger pipeline with git repo change (see link:https://github.com/siamaksade/tekton-cd-demo[this tutorial])
 2. Attempt to create from scratch (new-app? or use raw image stream creation)
   - or instead use OC commands to deploy instead of relying on trigger
 2. Setup other aspects of reference pipeline
@@ -61,7 +59,51 @@ git: https://github.com/hatmarch/spring-framework-petclinic.git
 revision: spring-5.2.0
 image out: image-registry.openshift-image-registry.svc:5000/test-petclinic4/jws-app
 
+=== Setting up Nexus ===
 
+Builds might download faster if you install a local repo like nexus, however there currently is an issue with finding dependency information for `spring-data-jdbc-core-2.0.0.M1.pom`.  See:
+
+----
+[INFO] Downloading: http://nexus:8081/repository/maven-public/org/springframework/data/spring-data-jdbc-core/2.0.0.M1/spring-data-jdbc-core-2.0.0.M1.pom
+[WARNING] The POM for org.springframework.data:spring-data-jdbc-core:jar:2.0.0.M1 is missing, no dependency information available
+----
+
+A good example on how to get this running with SpringBoot is link:https://github.com/siamaksade/tekton-cd-demo[here].  For the purposes of this demo, in general, to use nexus do the following:
+
+1. Deploy nexus in the same project as your pipeline
+
+----
+oc apply -f $DEMO_HOME/kube/nexus/nexus.yaml
+----
+
+2. Patch the pipeline to use the nexus mirror (again, assuming installation in the same project as the pipeline)
+
+----
+oc patch pipeline/petclinic-deploy-dev-tomcat --type='json' -p '[{"op": "add", "path": "/spec/tasks/0/params/1", "value": {"name": "MAVEN_MIRROR_URL","value": "http://nexus:8081/repository/maven-public/" } }]'
+
+----
+
+Depending on the tasks in your pipeline, some tasks (like maven test) require the setting of a `MAVEN_SETTINGS_CONFIGMAP` variable which is meant to name a configmap on the cluster that refers to a settings.xml that should be used in the maven run.
+
+See link:kube/nexus/configmap-custom-maven-settings.yaml[this] file for an example configmap to use the nexus repo.
+
+----
+oc apply -f $DEMO_HOME/kube/nexus/configmap-custom-maven-settings.yaml
+----
+
+=== Troubleshooting ===
+
+==== Logs ====
+
+You can see limited logs in the Tekton UI, but if you want the full logs, you can access these from the command line using the `tkn` command
+
+----
+# Get the list of pipelineruns in the current project
+tkn pipelinerun list
+
+# Output the full logs of the named pipeline run (where petclinic-deploy-dev-run-j7ktj is a pipeline run name )
+tkn pipelinerun logs petclinic-deploy-dev-run-j7ktj
+----
 
 == EB Environment ==
 
