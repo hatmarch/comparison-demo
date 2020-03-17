@@ -1,5 +1,67 @@
 = Comparison Demo: AWS and Openshift =
 
+== Pipelines (Tekton) ==
+
+[TODO]
+====
+1. Trigger pipeline with git repo change (see tutorial?)
+1. Nexus repo to make compilation faster?
+2. Attempt to create from scratch (new-app? or use raw image stream creation)
+  - or instead use OC commands to deploy instead of relying on trigger
+2. Setup other aspects of reference pipeline
+
+====
+
+From the instructions link:https://github.com/openshift/pipelines-tutorial/blob/master/install-operator.md[here]
+
+1. Install subscription (in openshift operators)
+----
+oc apply -f $DEMO_HOME/kube/tekton/tekton-subscription.yaml
+----
+
+2. Optionally install tekton dashboard (for visualization) as per link:https://github.com/tektoncd/dashboard[here]
+
+----
+oc apply -f $DEMO_HOME/kube/tekton/openshift-tekton-dashboard-release.yaml
+oc wait --for=condition=Available deployment/tekton-dashboard -n openshift-pipelines
+----
+
+Then you can open the dashboard by hitting this URL.  It will authenticate using OpenShift oauth
+
+----
+echo "https://$(oc get route tekton-dashboard -o jsonpath='{.spec.host}' -n openshift-pipelines)/"
+----
+
+3. Create a pull secret for registry.redhat.io.  This is needed for the s2i images
+
+----
+$DEMO_HOME/scripts/util-create-pull-secret.sh <USER> <PASS> <SECRET_NAME> <PROJECT_NAME>
+----
+
+3. Create a tomcat-s2i task
+
+----
+oc apply -f kube/tekton/tasks/s2i-tomcat-8.yaml
+----
+
+4. Create the tomcat pipeline
+
+----
+oc apply -f $DEMO_HOME/kube/tekton/pipelines/petclinic-dev-pipeline-tomcat.yaml
+----
+
+When the operator has finished installing, it will install a pipeline service account in all projects that have sufficient permissions to build stuff.  There is also a centralized openshift-pipelines project that holds pipeline supporting pods.  
+
+NOTE: See also tips and tricks from the link:https://github.com/openshift/pipelines-tutorial[pipelines tutorial]
+
+Attempt to start a build after creation of a tomcat app:
+
+git: https://github.com/hatmarch/spring-framework-petclinic.git
+revision: spring-5.2.0
+image out: image-registry.openshift-image-registry.svc:5000/test-petclinic4/jws-app
+
+
+
 == EB Environment ==
 
 _From helloworld-pipeline example link:https://medium.com/@xoor/deploying-a-node-js-app-to-aws-elastic-beanstalk-681fa88bac53[here]_
