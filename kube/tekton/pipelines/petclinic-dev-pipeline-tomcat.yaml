@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
-  name: petclinic-deploy-dev
+  name: petclinic-deploy-dev-tomcat
 spec:
   # workspaces:
   # - name: local-maven-repo
@@ -28,8 +28,7 @@ spec:
   #     value: custom-maven-settings
   - name: build-image
     taskRef:
-      name: s2i-java-8
-      kind: ClusterTask
+      name: s2i-tomcat-8
     # runAfter:
     #   - release-app
     #   - code-analysis
