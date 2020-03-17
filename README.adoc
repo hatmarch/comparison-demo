@@ -1,5 +1,9 @@
 = Comparison Demo: AWS and Openshift =
 
+== MySQL Operator ==
+
+Create new project and do link:https://github.com/oracle/mysql-operator/blob/master/docs/tutorial.md#create-a-simple-mysql-cluster[this step]
+
 == EB Environment ==
 
 _From helloworld-pipeline example link:https://medium.com/@xoor/deploying-a-node-js-app-to-aws-elastic-beanstalk-681fa88bac53[here]_
