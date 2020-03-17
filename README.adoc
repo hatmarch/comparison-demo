@@ -6,6 +6,7 @@
 ====
 1. Trigger pipeline with git repo change (see tutorial?)
 1. Nexus repo to make compilation faster?
+  see example link:https://github.com/siamaksade/tekton-cd-demo/blob/master/cd/nexus.yaml[here]
 2. Attempt to create from scratch (new-app? or use raw image stream creation)
   - or instead use OC commands to deploy instead of relying on trigger
 2. Setup other aspects of reference pipeline
