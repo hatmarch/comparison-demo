@@ -19,31 +19,50 @@ VSCode will open.  Indicate that you want to run in a container.
 Next compile the application locally (NOTE: The HSQLDB will use local in memory database)
 
 ----
-./mvnw install -PHSQLDB -DskipTests
+./mvnw package -PHSQLDB -DskipTests
 ----
 
 [NOTE]
 .If you really want to run from SQL
 ====
-Next, we need to make sure we have some sort of MySQL running for this.  The MySQL profile expects to connect on docker.for.mac.localhost:3306 
+if you want to run from mysql locally, the MySQL profile expects to connect on docker.for.mac.localhost:3306.
 
-1. Run from a docker container 
+1. Build for MySQL: You'll need to use the `MySQL` profile
+
+----
+./mvnw package -PMySQL -DskipTests
 ----
 
+Then choose one of the following DB options:
+
+** Run from a docker container 
+----
+docker run --name mysql-petclinic -e MYSQL_ROOT_PASSWORD=petclinic -e MYSQL_DATABASE=petclinic -p 3306:3306 mysql:5.7.8
 ----
 
-2. Run connected to the sqlserver in the dev directory
+** Run connected to the sqlserver in the dev directory
 
 ----
 oc port-forward -n petclinic-dev svc/jws-app-sql 3306:3306
 ----
 ====
 
-Add a tomcat server
+3. Add a tomcat server
 
-Debug the generated .war file in the tomcat server to run locally
+NOTE: This section requires the use of the vscode extension `adashen.vscode-tomcat` and assumes you're running from within the `quay.io/mhildenb/comparison-demo-base:1.0` (dev) container
 
-Open remote extension, make sure port is forwarded and click link to try out getting to the site
+* From the vscode file explorer, look for the tomcat panel and mouse over the _+_ button on the right
+
+image:../images/tomcat-add.png[]
+
+* Enter the tomcat directory when prompted: `/opt/webserver`
+
+4. Debug .war file by right clicking on the newly added tomcat server and selecting _Debug War Package_.  You should find the war in `target` subdirectory of the workspace.  Maven will also output where it put in the .war at the end of the `install` goal.
+
+image:../images/tomcat-debug.png[]
+
+5. Go to the remote tab (on the left side) and go down to the forwarded ports panel.  Pick to have 8080 forwarded.  Then hit the globe icon to open a browser to that port.
+
 
 POTENTIALLY: Loop around to show CRC running on local laptop?
 
