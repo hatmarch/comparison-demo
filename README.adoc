@@ -147,12 +147,7 @@ image out: image-registry.openshift-image-registry.svc:5000/test-petclinic4/jws-
 
 === Setting up Nexus ===
 
-Builds might download faster if you install a local repo like nexus, however there currently is an issue with finding dependency information for `spring-data-jdbc-core-2.0.0.M1.pom`.  See:
-
-----
-[INFO] Downloading: http://nexus:8081/repository/maven-public/org/springframework/data/spring-data-jdbc-core/2.0.0.M1/spring-data-jdbc-core-2.0.0.M1.pom
-[WARNING] The POM for org.springframework.data:spring-data-jdbc-core:jar:2.0.0.M1 is missing, no dependency information available
-----
+Builds can be up to 4 minutes faster using Nexus, however, due to some non-maven central repos some custom configuration may be necessary after initial setup.  If you run into issues then check <<Missing Repos,the steps here>>
 
 A good example on how to get this running with SpringBoot is link:https://github.com/siamaksade/tekton-cd-demo[here].  For the purposes of this demo, in general, to use nexus do the following:
 
@@ -177,7 +172,39 @@ See link:kube/nexus/configmap-custom-maven-settings.yaml[this] file for an examp
 oc apply -f $DEMO_HOME/kube/nexus/configmap-custom-maven-settings.yaml
 ----
 
+
 === Troubleshooting ===
+
+==== Missing Repos ====
+
+Builds using nexus fail with errors like this:
+
+----
+[INFO] Downloading: http://nexus:8081/repository/maven-public/org/springframework/data/spring-data-jdbc-core/2.0.0.M1/spring-data-jdbc-core-2.0.0.M1.pom
+[WARNING] The POM for org.springframework.data:spring-data-jdbc-core:jar:2.0.0.M1 is missing, no dependency information available
+----
+
+The original petclinic app uses some repos outside of maven central.  Namely:
+
+* https://maven.repository.redhat.com/earlyaccess/all/
+* https://repo.spring.io/milestone/
+
+You need to manually configure these repos in nexus.
+
+1. Connect to the nexus instance (see route) 
+
+2. Log into the nexus instance (standard nexus setup has admin, admin123)
+
+3. Go to _Repositories_ and _Create Repository_ for each of the repos needed
+
+image:images/nexus-repositories.png[]
+
+4. Here's example configuration for each of the above
+
+image:images/nexus-spring-repo.png[Spring]
+image:images/nexus-redhat.png[Red Hat]
+
+5. You might need to add each site's certificate to the Nexus trust store.  This can be done by clicking on _View Certificate_ and using the _+_ to add to truststore
 
 ==== Logs ====
 
