@@ -90,10 +90,21 @@ Check to make sure you've actually created the secret configured for the cluster
 
 [TODO]
 ====
-1. Trigger pipeline with git repo change (see link:https://github.com/siamaksade/tekton-cd-demo[this tutorial])
-2. Attempt to create from scratch (new-app? or use raw image stream creation)
-  - or instead use OC commands to deploy instead of relying on trigger
-2. Setup other aspects of reference pipeline
+0. Try to figure out why resources are not being rebuilt (changing the image does not change what's packed it appears)
+1. Setup another environment (prod) checking the setup setups
+2. Setup a pipeline to push to other environment (can steal from link:https://github.com/siamaksade/tekton-cd-demo[this tutorial])
+1. Instead of image trigger in Dev, do an actual deployment (using oc command tasks)
+4. Integrate with Jenkins instead
+5. Show integration with external (maybe code deploy?)
+6. Any Other aspects of pipeline to match code deploy?
+2. Attempt to use a workspace to further speed up the build (doesn't appear to have made a significant difference to build times in the way that it's currently used in the tutorial)
+----
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 01:58 min
+[INFO] Finished at: 2020-03-18T02:04:03Z
+[INFO] Final Memory: 75M/226M
+-----
 
 ====
 
@@ -144,6 +155,26 @@ Attempt to start a build after creation of a tomcat app:
 git: https://github.com/hatmarch/spring-framework-petclinic.git
 revision: spring-5.2.0
 image out: image-registry.openshift-image-registry.svc:5000/test-petclinic4/jws-app
+
+=== Setup Git Triggers ===
+
+Tekton allows for `EventListeners`, `TriggerTemplates`, and `TriggerBindings` to allow a git repo to hit a webhook and trigger a build.  See also link:https://github.com/tektoncd/triggers[here].  To get basic triggers going for both gogs and github run the following:
+
+NOTE: For an example of triggers working with Tekton, see files link:https://github.com/siamaksade/tekton-cd-demo/tree/master/triggers[in the template directory of this repo]
+
+NOTE: You may also want to consider link:https://github.com/tektoncd/experimental/blob/master/webhooks-extension/docs/GettingStarted.md[this tekton dashboard functionality]
+
+Create pipeline resources for trigger
+
+----
+oc apply -f $DEMO_HOME/kube/tekton/resources
+----
+
+Create trigger
+
+----
+oc apply -f $DEMO_HOME/kube/tekton/triggers
+----
 
 === Setting up Nexus ===
 
