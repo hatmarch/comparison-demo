@@ -2,7 +2,7 @@
 oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-agent.yaml
 oc adm policy add-scc-to-user anyuid -z mysql-agent 
 
-oc create secret generic mysql-root-password --from-literal=password="password"
+oc create secret generic mysql-root-password --from-literal=password="petclinic"
 
 oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-cluster-instance.yaml
 oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-primary-service.yaml
