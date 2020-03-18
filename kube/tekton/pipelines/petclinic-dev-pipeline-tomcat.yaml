@@ -5,6 +5,11 @@ metadata:
 spec:
   # workspaces:
   # - name: local-maven-repo
+  params:
+    - default: 'http://nexus:8081/repository/maven-public/'
+      description: For local mvn files for build
+      name: MAVEN_MIRROR_URL
+      type: string
   resources:
   - name: app-git
     type: git
@@ -35,6 +40,8 @@ spec:
     params:
       - name: TLSVERIFY
         value: "false"
+       - name: MAVEN_MIRROR_URL
+        value: $(params.MAVEN_MIRROR_URL)
     resources:
       inputs:
       - name: source
