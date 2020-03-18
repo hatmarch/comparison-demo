@@ -1,0 +1,9 @@
+apiVersion: "mysql.oracle.com/v1alpha1"
+kind: Cluster
+metadata:
+  name: jws-app-mysql-cluster
+spec:
+  replicas: 3
+  rootPasswordSecret:
+    name: mysql-root-password
+    name: mysql-root-password
