@@ -48,6 +48,19 @@ Show how we create additional environments and update pipeline to be able to dep
 
 Show creation of staging and production projects in OS
 
+Deploy the latest
+
+Deploy a rollback
+
+[NOTE]
+====
+But first need to make sure image stream is tagged appropriately in the CICD project where is the sha for an image in the local test-petclinic4 image registry for app jws-app
+
+----
+oc tag test-petclinic4/jws-app@sha256:3330273342340f89508bdd3ad0fb6ffcfef74dc8991921f9246402809e48a499 test-petclinic4/jws-app:1.0
+----
+====
+
 == Monitoring Application ==
 
 === AWS ===
