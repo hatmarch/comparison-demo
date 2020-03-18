@@ -1,4 +1,5 @@
 = Comparison Demo: AWS and Openshift =
+:experimental:
 
 == MySQL Operator ==
 
@@ -57,9 +58,9 @@ CREATE DATABASE petclinic;
 GRANT ALL PRIVILEGES ON petclinic.* TO 'pc'@'%';
 ----
 
-Or run these on a local command line [red]#FIXME: Untested#
+Or run these on a local command line
 ----
-oc run mysql-client --image=mysql:5.7 --rm --restart=Never \
+oc run mysql-client --image=mysql:5.7 --restart=Never --rm=true --attach=true --wait=true \
     -- mysql -h jws-app-mysql -uroot -ppassword -e "CREATE USER 'pc'@'%' IDENTIFIED BY 'petclinic'; \
       CREATE DATABASE petclinic; \
       GRANT ALL PRIVILEGES ON petclinic.* TO 'pc'@'%';"
@@ -91,13 +92,12 @@ Check to make sure you've actually created the secret configured for the cluster
 .TODO
 ****
 
-1. Setup another environment (prod) checking the setup setups
-2. Setup a pipeline to push to other environment (can steal from link:https://github.com/siamaksade/tekton-cd-demo[this tutorial])
+1. Support a separate CI/CD environment
 1. Instead of image trigger in Dev, do an actual deployment (using oc command tasks)
 4. Integrate with Jenkins instead
 5. Show integration with external (maybe code deploy?)
 6. Any Other aspects of pipeline to match code deploy?
-2. Attempt to use a workspace to further speed up the build (doesn't appear to have made a significant difference to build times in the way that it's currently used in the tutorial)
+2. Attempt to use a workspace (for example see link:https://github.com/siamaksade/tekton-cd-demo/blob/master/pipelines/pipeline-pvc.yaml[here]) to further speed up the build (doesn't appear to have made a significant difference to build times in the way that it's currently used in the tutorial)
 
 ----
 [INFO] BUILD SUCCESS
@@ -157,6 +157,32 @@ Attempt to start a build after creation of a tomcat app:
 * revision: spring-5.2.0
 * image out: image-registry.openshift-image-registry.svc:5000/test-petclinic4/jws-app
 
+=== Setup "Staging" Environment ===
+
+1. Create a new project
+
+[red]#FIXME: provide real values#
+----
+oc process -f $DEMO_HOME/kube/staging-project-template.yaml -p APP_NAME=jws-app -p DEVELOPMENT_PROJECT=test-petclinic4 -p STAGING_PROJECT=petclinic-stage -p PROJECT_NAME=test-petclinic4 | oc apply -f -
+----
+
+2. Create MySQL cluster (assumes MySQL Operator already running in cluster)
+
+----
+$DEMO_HOME/scripts/create-sql-cluster.sh
+----
+
+2. Create pipeline for staging (including creation of a local custom task)
+
+[red]#FIXME: provide real values for parameters#
+----
+ oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p DEV_APP_NAME=jws-app -p APP_NAME=jws-app -p PROJECT_NAME=test-petclinic4 -p STAGING_PROJECT=petclinic-stage -p DEVELOPMENT_PROJECT=test-petclinic4 | oc apply -f -
+
+ oc apply -f $DEMO_HOME/kube/tekton/tasks/oc-task.yaml -n test-petclinic4
+
+ oc policy add-role-to-user edit system:serviceaccount:test-petclinic4:pipeline -n petclinic-stage
+----
+
 === Setup Git Triggers ===
 
 Tekton allows for `EventListeners`, `TriggerTemplates`, and `TriggerBindings` to allow a git repo to hit a webhook and trigger a build.  See also link:https://github.com/tektoncd/triggers[here].  To get basic triggers going for both gogs and github run the following:
@@ -204,7 +230,6 @@ See link:kube/nexus/configmap-custom-maven-settings.yaml[this] file for an examp
 oc apply -f $DEMO_HOME/kube/nexus/configmap-custom-maven-settings.yaml
 ----
 
-
 === Troubleshooting ===
 
 ==== Images missing ====
@@ -212,6 +237,10 @@ oc apply -f $DEMO_HOME/kube/nexus/configmap-custom-maven-settings.yaml
 If after your (re)build you find that an image you changed is not appearing, attempt to clear your cache.
 
 image:images/image-cached.png[]
+
+One way on chrome to do this is via the DevTools ( kbd:[F12] )
+
+image:images/devtools-disablecache.png[]
 
 ==== Missing Repos ====
 
