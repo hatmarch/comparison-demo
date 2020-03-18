@@ -5,7 +5,46 @@ Premise: You have a (petclinic) spring application that you need to  host in the
 == Local creation ==
 
 Show our demo running locally 
-For ease, this will be running in two containers on my local laptop
+
+In a local shell, go to the springboot directory and run the following commands
+
+----
+source scripts/shell-setup.sh
+cd $DEMO_HOME/spring-framework-petclinic
+code . 
+----
+
+VSCode will open.  Indicate that you want to run in a container.
+
+Next compile the application locally (NOTE: The HSQLDB will use local in memory database)
+
+----
+./mvnw install -PHSQLDB -DskipTests
+----
+
+[NOTE]
+.If you really want to run from SQL
+====
+Next, we need to make sure we have some sort of MySQL running for this.  The MySQL profile expects to connect on docker.for.mac.localhost:3306 
+
+1. Run from a docker container 
+----
+
+----
+
+2. Run connected to the sqlserver in the dev directory
+
+----
+oc port-forward -n petclinic-dev svc/jws-app-sql 3306:3306
+----
+====
+
+Add a tomcat server
+
+Debug the generated .war file in the tomcat server to run locally
+
+Open remote extension, make sure port is forwarded and click link to try out getting to the site
+
 POTENTIALLY: Loop around to show CRC running on local laptop?
 
 == Development Environment Creation ==
@@ -19,6 +58,31 @@ Show LoadBalancers and reference Route53
 
 
 === OpenShift ===
+
+1. Create a new project
+
+----
+oc create project petclinic-dev
+----
+
+2. Show the creation of a new MySQL cluster using the cluster YAML
+
+----
+$DEMO_HOME/scripts/create-sql-cluster.sh 
+----
+
+3. Create from template 
+
+* mention that this could be done from templates if we weren't worried about ongoing maintainance of the database
+
+NOTE: Run this from the spring-boot instance
+
+----
+oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='https://github.com/hatmarch/spring-framework-petclinic.git' --param=SOURCE_REPOSITORY_REF='test-trigger' --param=CONTEXT_DIR='' 
+----
+
+
+
 Show MySQL operator and then CR for provisioning of database
 Show Template for creating a tomcat app
 S2I
