@@ -2,7 +2,7 @@
 
 == MySQL Operator ==
 
-See information link:https://blogs.oracle.com/developers/introducing-the-oracle-mysql-operator-for-kubernetes[here] for the operator (which can be found link:https://github.com/oracle/mysql-operator[here])
+See information link:https://blogs.oracle.com/developers/introducing-the-oracle-mysql-operator-for-kubernetes[here] for the operator (which can be found link:https://github.com/oracle/mysql-operator[here]).  Even better instructions are link:https://banzaicloud.com/blog/mysql-on-kubernetes/#how-to-install-oracle-mysql-operator[here] from "banzaicloud"
 
 First install the operator
 
@@ -15,19 +15,34 @@ oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-agent.yaml
 oc adm policy add-scc-to-user anyuid -z mysql-agent 
 ----
 
+Create a root password secret to use for the cluster
+
+----
+oc create secret generic mysql-root-password --from-literal=password="password"
+----
+
+[NOTE]
+====
+You can let the operator create the password for you.  If you follow this route, you'll need to fish out the password yourself.  Assuming the cluster is named `jws-app-mysql` (running this command in the project in which it is installed):
+
+----
+oc get secret jws-app-mysql-root-password -o jsonpath="{.data.password}" | base64 --decode
+----
+====
+
 Then install an instance of a MySQL Cluster
 
 ----
 oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-cluster-instance.yaml
 ----
 
-Get the password of the cluster, assuming the cluster is named `jws-app-mysql` (running this command in the project in which it is installed):
+Next create a service to represent acccess to the current cluster master
 
 ----
-oc get secret jws-app-mysql-root-password -o jsonpath="{.data.password}" | base64 --decode
+oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-primary-service.yaml
 ----
 
-Then you can connect to it using Adminer
+Test access to the database using Adminer
 
 ----
 oc port-forward svc/jws-app-mysql 3306:3306
@@ -38,9 +53,18 @@ Login as root (using the secret above) and run these commands (from link:https:/
 
 ----
 CREATE USER 'pc'@'%' IDENTIFIED BY 'petclinic';
-
-[red]#FIXME: Grant permissions to whole database or make the petclinic db and grant permissions to it#
+CREATE DATABASE petclinic;
+GRANT ALL PRIVILEGES ON petclinic.* TO 'pc'@'%';
 ----
+
+Or run these on a local command line [red]#FIXME: Untested#
+----
+oc run mysql-client --image=mysql:5.7 --rm --restart=Never \
+    -- mysql -h jws-app-mysql -uroot -ppassword -e "CREATE USER 'pc'@'%' IDENTIFIED BY 'petclinic'; \
+      CREATE DATABASE petclinic; \
+      GRANT ALL PRIVILEGES ON petclinic.* TO 'pc'@'%';"
+----
+
 
 === Troubleshooting ===
 
@@ -58,6 +82,9 @@ One known issue is that you can't make your clustername too long:
 E0317 07:08:48.666574       1 controller.go:291] error syncing 'test-petclinic4/mysql-cluster-with-3-replicas': validating Cluster: metadata.name: Invalid value: "mysql-cluster-with-3-replicas": longer than maximum supported length 28 (see: https://bugs.mysql.com/bug.php?id=90601)
 ----
 
+==== Configuration Error on Pod ====
+
+Check to make sure you've actually created the secret configured for the cluster
 
 
 == EB Environment ==
