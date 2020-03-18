@@ -6,4 +6,3 @@ spec:
   replicas: 3
   rootPasswordSecret:
     name: mysql-root-password
-    name: mysql-root-password
