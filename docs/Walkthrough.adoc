@@ -86,6 +86,8 @@ oc create project petclinic-dev
 
 2. Show the creation of a new MySQL cluster using the cluster YAML
 
+NOTE: There may be the ability to install this operator from the catalog, if so, show this and wait until the operator indicates that it's installed to the repo before going further.  Otherwise it need to be installed from a helm chart.
+
 ----
 $DEMO_HOME/scripts/create-sql-cluster.sh 
 ----
@@ -97,10 +99,34 @@ $DEMO_HOME/scripts/create-sql-cluster.sh
 NOTE: Run this from the spring-boot instance
 
 ----
-oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='https://github.com/hatmarch/spring-framework-petclinic.git' --param=SOURCE_REPOSITORY_REF='test-trigger' --param=CONTEXT_DIR='' 
+oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='https://github.com/hatmarch/spring-framework-petclinic.git' --param=SOURCE_REPOSITORY_REF='trigger-test' --param=CONTEXT_DIR='' 
 ----
 
+4. Then can show the logs of the S2I running using this command
 
+----
+oc logs -f bc/jws-app
+----
+
+Point out how:
+* it's pulling from the github repo the branch specified
+* it's building into a container that has all the compat machinery
+* uses the profile "openshift" by default
+
+Take a look at the console and show how it's using OpenShift's built in BuildSystem
+
+image:images/openshift-builds.png[]
+
+Also consider showing the _Build Overview_ from the *Developer Perspective*
+
+image:images/build-overview.png[]
+
+5. Build will take some amount of time [blue]#Takes about 10 minutes
+
+* Can show that the SQL cluster is there waiting
+* Show the developer perspective
+
+image:images/developer-topology.png[]
 
 Show MySQL operator and then CR for provisioning of database
 Show Template for creating a tomcat app
@@ -118,6 +144,12 @@ Show that checking into a git repo can trigger integration chain and deployment 
 Show CodeDeploy with EB
 
 === Openshift ===
+
+1. Install the OpenShift Operator
+
+2. Create the petclinic-cicd project
+
+
 Show Tekton (OpenShift Pipeline) or Jenkins with Openshift
 
 == Production Environments ==
