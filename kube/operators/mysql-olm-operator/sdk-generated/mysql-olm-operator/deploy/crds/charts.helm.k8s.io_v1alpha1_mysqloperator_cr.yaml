@@ -1,0 +1,18 @@
+apiVersion: charts.helm.k8s.io/v1alpha1
+kind: MysqlOperator
+metadata:
+  name: example-mysqloperator
+spec:
+  # Default values copied from <project_dir>/helm-charts/mysql-operator/values.yaml
+  
+  image:
+    pullPolicy: Always
+    registry: iad.ocir.io/oracle
+    tag: 0.3.0
+  operator:
+    global: true
+    namespace: mysql-operator
+    register_crd: true
+  rbac:
+    enabled: true
+  

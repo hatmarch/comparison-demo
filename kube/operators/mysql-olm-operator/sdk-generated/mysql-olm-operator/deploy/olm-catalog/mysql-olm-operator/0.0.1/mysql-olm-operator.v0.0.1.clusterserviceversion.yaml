@@ -1,0 +1,185 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "charts.helm.k8s.io/v1alpha1",
+          "kind": "MysqlOperator",
+          "metadata": {
+            "name": "mysqloperator"
+          },
+          "spec": {
+            "image": {
+              "pullPolicy": "Always",
+              "registry": "iad.ocir.io/oracle",
+              "tag": "0.3.0"
+            },
+            "operator": {
+              "global": true,
+              "namespace": "mysql-operator",
+              "register_crd": true
+            },
+            "rbac": {
+              "enabled": true
+            }
+          }
+        }
+      ]
+    capabilities: Basic Install
+  name: mysql-olm-operator.v0.0.1
+  namespace: openshift-operators
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions: 
+    owned: 
+    - kind: MysqlOperator
+      name: mysqloperator
+      #name: mysqloperator.charts.helm.k8s.io
+      version: v1alpha1
+      description: MySQL Operator
+      displayName: MySQL Operator
+  description: >
+    The MySQL Operator provides the following core features: 
+    * Create and delete highly available MySQL InnoDB clusters in Kubernetes with minimal effort
+    * Automate database backups, failure detection, and recovery
+    * Schedule automated backups as part of a cluster definition
+    * Create 'on-demand' backups.
+    * Use backups to restore a database
+  displayName: MySQL Operator
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          verbs:
+          - get
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          - secrets
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+        - apiGroups:
+          - apiextensions.k8s.io
+          resources:
+          - customresourcedefinitions
+          verbs:
+          - '*'
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - clusterrolebindings
+          - clusterroles
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - serviceaccounts
+          verbs:
+          - '*'
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          verbs:
+          - '*'
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - apps
+          resourceNames:
+          - mysql-olm-operator
+          resources:
+          - deployments/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - get
+        - apiGroups:
+          - apps
+          resources:
+          - replicasets
+          - deployments
+          verbs:
+          - get
+        - apiGroups:
+          - charts.helm.k8s.io
+          resources:
+          - '*'
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        serviceAccountName: mysql-olm-operator
+      deployments:
+      - name: mysql-olm-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: mysql-olm-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                name: mysql-olm-operator
+            spec:
+              containers:
+              - env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: mysql-olm-operator
+                image: quay.io/mhildenb/mysql-operator:v0.0.1
+                imagePullPolicy: Always
+                name: mysql-olm-operator
+                resources: {}
+              serviceAccountName: mysql-olm-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  maturity: alpha
+  provider: 
+    name: "Oracle MySQL"
+    #url: "https://github.com/oracle/mysql-operator"
+  # replaces: mysql-olm-operator.v0.0.0
+  version: 0.0.1
