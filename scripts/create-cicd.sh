@@ -73,7 +73,9 @@ EOF
 command.install() {
   oc version >/dev/null 2>&1 || err "no oc binary found"
 
-  $DEMO_HOME || err "DEMO_HOME not set"
+  if [[ -z "${DEMO_HOME:-}" ]]; then
+    err '$DEMO_HOME not set'
+  fi
 
   info "Creating namespaces $cicd_prj, $dev_prj, $stage_prj"
   oc get ns $cicd_prj 2>/dev/null  || { 
@@ -106,7 +108,7 @@ command.install() {
   sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/pipelines/petclinic-image-resource.yaml | oc apply -f - -n $cicd_prj
   
   # FIXME: Decide which repo we want to trigger/pull from
-  sed "s#https://github.com/spring-projects/spring-petclinic#http://$GOGS_HOSTNAME/gogs/spring-petclinic.git#g" pipelines/petclinic-git-resource.yaml | oc apply -f - -n $cicd_prj
+  # sed "s#https://github.com/spring-projects/spring-petclinic#http://$GOGS_HOSTNAME/gogs/spring-petclinic.git#g" pipelines/petclinic-git-resource.yaml | oc apply -f - -n $cicd_prj
   
   # Install pipeline triggers
   oc apply -f $DEMO_HOME/kube/tekton/triggers -n $cicd_prj
@@ -122,16 +124,16 @@ command.install() {
   # oc set image deployment/spring-petclinic spring-petclinic=image-registry.openshift-image-registry.svc:5000/$stage_prj/spring-petclinic -n $stage_prj
 
   info "Initiatlizing git repository in Gogs and configuring webhooks"
-  sed "s/@HOSTNAME/$GOGS_HOSTNAME/g" config/gogs-configmap.yaml | oc create -f - -n $cicd_prj
+  sed "s/@HOSTNAME/$GOGS_HOSTNAME/g" $DEMO_HOME/kube/config/gogs-configmap.yaml | oc create -f - -n $cicd_prj
   oc rollout status deployment/gogs -n $cicd_prj
-  oc create -f config/gogs-init-taskrun.yaml -n $cicd_prj
+  oc create -f $DEMO_HOME/kube/config/gogs-init-taskrun.yaml -n $cicd_prj
 
   cat <<-EOF
 
 ############################################################################
 ############################################################################
 
-  Demo is installed! Give it a few minutes to finish deployments and then:
+  CI/CD project is installed! Give it a few minutes to finish deployments and then:
 
   1) Go to spring-petclinic Git repository in Gogs:
      http://$GOGS_HOSTNAME/gogs/spring-petclinic.git

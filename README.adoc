@@ -205,6 +205,10 @@ Create trigger
 oc apply -f $DEMO_HOME/kube/tekton/triggers
 ----
 
+==== Troubleshooting ====
+
+If the trigger doesn't appear to fire, then check the logs of the pod that is running that represents the webhook.  The probably is likely in the `PipelineRun` template.
+
 === Setting up Nexus ===
 
 Builds can be up to 4 minutes faster using Nexus, however, due to some non-maven central repos some custom configuration may be necessary after initial setup.  If you run into issues then check <<Missing Repos,the steps here>>
