@@ -93,7 +93,7 @@ command.install() {
   # oc policy add-role-to-user edit system:serviceaccount:$cicd_prj:pipeline -n $stage_prj
 
   info "Deploying CI/CD infra to $cicd_prj namespace"
-  oc apply -f $DEMO_HOME/kube/cd -n $cicd_prj
+  oc apply -R -f $DEMO_HOME/kube/cd -n $cicd_prj
   GOGS_HOSTNAME=$(oc get route gogs -o template --template='{{.spec.host}}' -n $cicd_prj)
 
   info "Deploying pipeline and tasks to $cicd_prj namespace"
