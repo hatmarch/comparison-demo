@@ -89,6 +89,8 @@ Check to make sure you've actually created the secret configured for the cluster
 
 == Pipelines (Tekton) ==
 
+Pipeline setup is inspired by this post link:https://developers.redhat.com/blog/2020/02/26/speed-up-maven-builds-in-tekton-pipelines/[here]
+
 .TODO
 ****
 
