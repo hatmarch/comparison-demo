@@ -1,9 +1,35 @@
 #!/bin/bash
 
-USER="$1"
-PASSWORD="$2"
-SECRET_NAME=$3
-PROJECT_NAME=$4
+declare USER=""
+declare PASSWORD=""
+declare SECRET_NAME=""
+declare PROJECT_NAME="$(oc project -q)"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -u|--user)
+      USER=$2
+      shift 2
+      ;;
+    -p|--password)
+      PASSWORD=$2
+      shift 2
+      ;;
+    --project)
+      PROJECT_NAME=$2
+      shift 2
+      ;;
+    *)
+      if [ -z "$SECRET_NAME" ]; then
+        SECRET_NAME=$1
+        shift
+      else
+        echo "Secret name provided twice."
+        exit 1
+      fi
+      ;;
+  esac
+done
 
 if [ -z "$USER" ]; then
     echo "Must specify a user for registry.redhat.io"
@@ -20,8 +46,8 @@ if [ -z "${SECRET_NAME}" ]; then
 fi
 
 if [ -z "${PROJECT_NAME}" ]; then
-    # use the current project
-    PROJECT_NAME=$(oc project -q)
+    echo "Invalid or null project name specified"
+    exit 1
 fi
 
 echo "Using user: $USER and password: $PASSWORD for secret $SECRET_NAME in project ${PROJECT_NAME}"

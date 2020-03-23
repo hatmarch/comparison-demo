@@ -70,37 +70,87 @@ POTENTIALLY: Loop around to show CRC running on local laptop?
 
 How to get our application deployed to Dev
 
-=== AWS ===
-Show how ElasticBeanstalk provisions multiple VM with RDS
-
-Show LoadBalancers and reference Route53
-
-
 === OpenShift ===
 
 1. Create a new project
 
 ----
-oc create project petclinic-dev
+oc new-project petclinic-dev
 ----
 
 2. Show the creation of a new MySQL cluster using the cluster YAML
 
-NOTE: There may be the ability to install this operator from the catalog, if so, show this and wait until the operator indicates that it's installed to the repo before going further.  Otherwise it need to be installed from a helm chart.
+[NOTE]
+====
+There may be the ability to install this operator from the catalog, if so, show this and wait until the operator indicates that it's installed to the repo before going further.  Otherwise it need to be installed from a helm chart.  If with operator, check with the following command and make sure you get the Succeeded PHASE of the mysql-olm-operator.
+
+[blue]#This might be a good time to talk about operators in general#
+
+----
+ oc get csv -n petclinic-dev -w
+NAME                                   DISPLAY                        VERSION   REPLACES                              PHASE
+mysql-olm-operator.v0.0.1              MySQL Operator                 0.0.1                                           Succeeded
+----
+
+====
+
+Once the operator has been copied to our project, we are free to create the resources (CRD) that will create our cluster
 
 ----
 $DEMO_HOME/scripts/create-sql-cluster.sh 
 ----
 
+[red]#FIXME: If the CSV for the MySQL operator can be fixed up, it will be easier to show the custom resources in the UI#
+
+_While waiting for the creation of the MySQL cluster, move on to the build_
+
 3. Create from template 
 
 * mention that this could be done from templates if we weren't worried about ongoing maintainance of the database
 
-NOTE: Run this from the spring-boot instance
+Open the _Developer Perspective_ in the _petclinic-dev_ project and click the _+_ button.  Then select _From Catalog_
+
+image:../images/dev-from-catalog.png[]
+
+image:../images/dev-tomcat-template.png[]
+
+NOTE: Run either of these from the spring-boot vscode instance
+
+[OPTION 1]
+.Install based on S2I
+====
+
+To create from a S2I template, use the following command
 
 ----
 oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='https://github.com/hatmarch/spring-framework-petclinic.git' --param=SOURCE_REPOSITORY_REF='trigger-test' --param=CONTEXT_DIR='' 
 ----
+
+====
+
+[OPTION 2]
+.Install based on Binary
+====
+For more information on building from a binary that is created from this, perhaps see link:https://docs.openshift.com/container-platform/3.6/dev_guide/dev_tutorials/binary_builds.html[here] and especially link:http://v1.uncontained.io/playbooks/app_dev/binary_deployment_howto.html[here]
+
+To create from a pre-compiled binary, use the following command:
+
+----
+oc new-build jboss-webserver31-tomcat8-openshift:1.4 --binary=true --name=jws-app
+
+# setup the app first before building so that the steps of the build can be shown
+oc new-app jws-app --allow-missing-imagestream-tags=true
+oc apply -f $DEMO_HOME/kube/services/jws-app-binary.yaml
+
+# print out the route to the application
+echo "https://$(oc get route jws-app -o jsonpath='{.spec.host}')/"
+
+# Run from the root of the spring dev directory (could use --follow=true on this command if you want)
+oc start-build jws-app --from-file=target 
+
+----
+
+====
 
 4. Then can show the logs of the S2I running using this command
 
@@ -108,49 +158,63 @@ oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='htt
 oc logs -f bc/jws-app
 ----
 
-Point out how:
+Point out how (*S2I builds only*)
+
 * it's pulling from the github repo the branch specified
-* it's building into a container that has all the compat machinery
+* it's building into a container that has all the runtime libraries
 * uses the profile "openshift" by default
 
 Take a look at the console and show how it's using OpenShift's built in BuildSystem
 
-image:images/openshift-builds.png[]
+image:../images/openshift-builds.png[]
 
 Also consider showing the _Build Overview_ from the *Developer Perspective*
 
-image:images/build-overview.png[]
+image:../images/build-overview.png[]
 
-5. Build will take some amount of time [blue]#Takes about 10 minutes
+5. Build will take some amount of time [blue]#S2I takes about 10 minutes#
 
 * Can show that the SQL cluster is there waiting
 * Show the developer perspective
 
-image:images/developer-topology.png[]
+image:../images/developer-topology.png[]
 
-Show MySQL operator and then CR for provisioning of database
-Show Template for creating a tomcat app
-S2I
+==== Points to Teach from the UI ====
 
-How Services and replicasets are an analog to Load Balancers and ASG
+* Routes
+* Services 
+* Pods
 
-NOTE: AZ vs. Nodes
+Show how more pods can be created, for example
+
+image:../images/dev-more-pods.png[]
 
 == Continuous Integration ==
 
-Show that checking into a git repo can trigger integration chain and deployment to dev
-
-=== AWS ===
-Show CodeDeploy with EB
+WARNING: This section assumes that the petclinic-cicd project has been created.  See link:../README.adoc[README.adoc] for more details.
 
 === Openshift ===
 
-1. Install the OpenShift Operator
+1. Point out the OpenShift Pipeline Operator
 
-2. Create the petclinic-cicd project
+2. Show the Pipeline overview
 
+3. Talk about 
+    
+    * Tasks
+    * Trigger Events
 
-Show Tekton (OpenShift Pipeline) or Jenkins with Openshift
+==== Trigger build from internal repo ====
+
+4. Point out internal git repo
+
+    * 
+
+==== Trigger build from external repo ====
+
+5. Perhaps demonstrate triggering from github
+
+==== Trigger deployment from code pipeline? ====
 
 == Production Environments ==
 

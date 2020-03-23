@@ -20,13 +20,13 @@ spec:
     - name: source
       type: git
   steps:
-    - name: git-unshallow
-      image: gcr.io/cloud-builders/mvn
-      workingDir: /workspace/source
-      command: ["/usr/bin/git"]
-      args:
-        - fetch
-        - --unshallow
+    # - name: git-unshallow
+    #   image: gcr.io/cloud-builders/mvn
+    #   workingDir: /workspace/source
+    #   command: ["/usr/bin/git"]
+    #   args:
+    #     - fetch
+    #     - --unshallow
     - name: mvn
       image: gcr.io/cloud-builders/mvn
       workingDir: /workspace/source
@@ -39,6 +39,7 @@ spec:
         - sonar:sonar
         - -Dsonar.host.url=$(inputs.params.SONAR_URL)
         - -Dsonar.userHome=/tmp/sonar
+        - -DskipTests
       volumeMounts:
         - name: maven-settings
           mountPath: /var/config

@@ -113,6 +113,8 @@ Pipeline setup is inspired by this post link:https://developers.redhat.com/blog/
 
 From the instructions link:https://github.com/openshift/pipelines-tutorial/blob/master/install-operator.md[here]
 
+=== Pipelines Operator Install ===
+
 1. Install subscription (in openshift operators)
 ----
 oc apply -f $DEMO_HOME/kube/tekton/tekton-subscription.yaml
@@ -131,35 +133,33 @@ Then you can open the dashboard by hitting this URL.  It will authenticate using
 echo "https://$(oc get route tekton-dashboard -o jsonpath='{.spec.host}' -n openshift-pipelines)/"
 ----
 
-3. Create a pull secret for registry.redhat.io.  This is needed for the s2i images
-
-----
-$DEMO_HOME/scripts/util-create-pull-secret.sh <USER> <PASS> <SECRET_NAME> <PROJECT_NAME>
-----
-
-3. Create a tomcat-s2i task
-
-----
-oc apply -f kube/tekton/tasks/s2i-tomcat-8.yaml
-----
-
-4. Create the tomcat pipeline
-
-----
-oc apply -f $DEMO_HOME/kube/tekton/pipelines/petclinic-dev-pipeline-tomcat.yaml
-----
-
 When the operator has finished installing, it will install a pipeline service account in all projects that have sufficient permissions to build stuff.  There is also a centralized openshift-pipelines project that holds pipeline supporting pods.  
 
 NOTE: See also tips and tricks from the link:https://github.com/openshift/pipelines-tutorial[pipelines tutorial]
 
-Attempt to start a build after creation of a tomcat app:
+=== CI/CD Project Install ===
 
-* git: https://github.com/hatmarch/spring-framework-petclinic.git
-* revision: spring-5.2.0
-* image out: image-registry.openshift-image-registry.svc:5000/test-petclinic4/jws-app
+3. Create the CI/CD project
 
-=== Setup "Staging" Environment ===
+----
+oc new-project petclinic-cicd
+----
+
+4. Create a pull secret for registry.redhat.io.  This is needed for the s2i images.  It will basically associate this secret with the pipelines service account.  NOTE: you can use a redhat registry server account name and password instead of your own login and password
+
+----
+$DEMO_HOME/scripts/util-create-pull-secret.sh registry-redhat-io --project petclinic-cicd -u <USER> -p <PASS> 
+----
+
+5. Run the following script to setup the entire cicd project (it will create a project called `<PROJECT_PREFIX>-cicd` (where `<PROJECT_PREFIX>` is the value passed to --project-prefix in the command below) if it doesn't exist already to install all the artifacts into
+
+WARNING: This must be run *after* the corresponding development environment (e.g. petclinic-dev) has been created or the script will fail.  This is due to the cicd pipeline needing to update the permissions of the pipeline service account to be able to "see into and change" (e.g. edit) the dev project
+
+----
+$DEMO_HOME/scripts/create-cicd.sh install --project-prefix petclinic
+----
+
+== Setup "Staging" Environment ==
 
 1. Create a new project
 
@@ -174,6 +174,7 @@ oc process -f $DEMO_HOME/kube/staging-project-template.yaml -p APP_NAME=jws-app 
 $DEMO_HOME/scripts/create-sql-cluster.sh
 ----
 
+[red]#FIXME: This pipeline needs to be setup in the ci/cd environment either from the script run to create the staging environment or now
 2. Create pipeline for staging (including creation of a local custom task)
 
 [red]#FIXME: provide real values for parameters#
@@ -247,6 +248,23 @@ image:images/image-cached.png[]
 One way on chrome to do this is via the DevTools ( kbd:[F12] )
 
 image:images/devtools-disablecache.png[]
+
+==== Release issues ====
+
+If you get errors when releasing, check the pipeline run logs using this command:
+
+----
+tkn pipelinerun logs petclinic-dev-pipeline-tomcat-run-mxgt4 -t release-app
+----
+
+If you see the following in the log output then you either need to fix the version number increment or change the nexus repository to allow updates
+----
+[release-app : mvn] [ERROR] Failed to execute goal org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy (default-deploy) on project spring-framework-petclinic: Failed to deploy artifacts: Could not transfer artifact org.springframework.samples:spring-framework-petclinic:war:5.2.4 from/to nexus (http://nexus:8081/repository/maven-releases/): Transfer failed for http://nexus:8081/repository/maven-releases/org/springframework/samples/spring-framework-petclinic/5.2.4/spring-framework-petclinic-5.2.4.war 400 Repository does not allow updating assets: maven-releases -> [Help 1]
+----
+
+Log into nexus as an admin, select the maven releases repo, and make sure _Allow redeploy_ is set under _Deployment policy_
+
+image:images/nexus-allow-redeploy.png[]
 
 ==== Missing Repos ====
 
