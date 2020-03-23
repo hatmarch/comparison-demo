@@ -381,6 +381,20 @@ Printing Status:
 
 ----
 
+== RDS Debugging ==
+
+Access databases by using SSH to the RDS instance and forwarding port 3306 locally through to the database server
+
+----
+ ssh -i "mwh-bastion.pem" ec2-user@ec2-13-210-144-99.ap-southeast-2.compute.amazonaws.com -L 3306:aa3s38alasq0v1.cjpxzung9qid.ap-southeast-2.rds.amazonaws.com:3306
+----
+
+Then use the adminer pod to debug
+
+----
+docker run -p 8080:8080 -e ADMINER_DEFAULT_SERVER=docker.for.mac.localhost adminer:latest
+----
+
 == AWS Pipeline ==
 
 _From helloworld-pipeline example link:https://medium.com/@xoor/using-aws-codepipeline-to-automate-deployments-to-elasticbeanstalk-e80ca988ef70[here]_
