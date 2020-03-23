@@ -388,8 +388,7 @@ You can find the tomcat home directory at `/usr/share/tomcat`.  See the `logs/ca
 To restart the server, use
 
 ----
-sudo service stop tomcat
-sudo service start tomcat
+sudo service tomcat8 restart
 ----
 
 == RDS Debugging ==
