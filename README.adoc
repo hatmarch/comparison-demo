@@ -381,6 +381,17 @@ Printing Status:
 
 ----
 
+== Tomcat Instance Troubleshooting ==
+
+You can find the tomcat home directory at `/usr/share/tomcat`.  See the `logs/catalina.out` for the most recent logfile.
+
+To restart the server, use
+
+----
+sudo service stop tomcat
+sudo service start tomcat
+----
+
 == RDS Debugging ==
 
 Access databases by using SSH to the RDS instance and forwarding port 3306 locally through to the database server
