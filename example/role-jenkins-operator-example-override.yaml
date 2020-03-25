@@ -1,0 +1,59 @@
+﻿kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jenkins-operator-example-override
+  namespace: test-petclinic4
+  labels:
+    app: jenkins-operator
+    jenkins-cr: example
+rules:
+  - verbs:
+      - create
+    apiGroups:
+      - ''
+    resources:
+      - pods/portforward
+  - verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    apiGroups:
+      - '*'
+    resources:
+      - pods
+      - builds
+      - buildconfigs
+      - imagestreams
+      - configmaps
+  - verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - pods/exec
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - pods/log
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - secrets

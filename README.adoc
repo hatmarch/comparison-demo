@@ -1,4 +1,5 @@
 = Comparison Demo: AWS and Openshift =
+:experimental:
 
 == MySQL Setup ==
 
@@ -96,7 +97,7 @@ CREATE DATABASE petclinic;
 GRANT ALL PRIVILEGES ON petclinic.* TO 'pc'@'%';
 ----
 
-Or run these on a local command line 
+Or run these on a local command line
 ----
 oc run mysql-client --image=mysql:5.7 --restart=Never --rm=true --attach=true --wait=true \
     -- mysql -h jws-app-mysql -uroot -ppetclinic -e "CREATE USER 'pc'@'%' IDENTIFIED BY 'petclinic'; \
@@ -125,6 +126,227 @@ E0317 07:08:48.666574       1 controller.go:291] error syncing 'test-petclinic4/
 
 Check to make sure you've actually created the secret configured for the cluster
 
+== Pipelines (Tekton) ==
+
+Pipeline setup is inspired by this post link:https://developers.redhat.com/blog/2020/02/26/speed-up-maven-builds-in-tekton-pipelines/[here]
+
+.TODO
+****
+
+1. Support a separate CI/CD environment
+1. Instead of image trigger in Dev, do an actual deployment (using oc command tasks)
+4. Integrate with Jenkins instead
+5. Show integration with external (maybe code deploy?)
+6. Any Other aspects of pipeline to match code deploy?
+2. Attempt to use a workspace (for example see link:https://github.com/siamaksade/tekton-cd-demo/blob/master/pipelines/pipeline-pvc.yaml[here]) to further speed up the build (doesn't appear to have made a significant difference to build times in the way that it's currently used in the tutorial)
+
+----
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 01:58 min
+[INFO] Finished at: 2020-03-18T02:04:03Z
+[INFO] Final Memory: 75M/226M
+----
+
+****
+
+From the instructions link:https://github.com/openshift/pipelines-tutorial/blob/master/install-operator.md[here]
+
+=== Pipelines Operator Install ===
+
+1. Install subscription (in openshift operators)
+----
+oc apply -f $DEMO_HOME/kube/tekton/tekton-subscription.yaml
+----
+
+2. Optionally install tekton dashboard (for visualization) as per link:https://github.com/tektoncd/dashboard[here]
+
+----
+oc apply -f $DEMO_HOME/kube/tekton/openshift-tekton-dashboard-release.yaml
+oc wait --for=condition=Available deployment/tekton-dashboard -n openshift-pipelines
+----
+
+Then you can open the dashboard by hitting this URL.  It will authenticate using OpenShift oauth
+
+----
+echo "https://$(oc get route tekton-dashboard -o jsonpath='{.spec.host}' -n openshift-pipelines)/"
+----
+
+When the operator has finished installing, it will install a pipeline service account in all projects that have sufficient permissions to build stuff.  There is also a centralized openshift-pipelines project that holds pipeline supporting pods.  
+
+NOTE: See also tips and tricks from the link:https://github.com/openshift/pipelines-tutorial[pipelines tutorial]
+
+=== CI/CD Project Install ===
+
+3. Create the CI/CD project
+
+----
+oc new-project petclinic-cicd
+----
+
+4. Create a pull secret for registry.redhat.io.  This is needed for the s2i images.  It will basically associate this secret with the pipelines service account.  NOTE: you can use a redhat registry server account name and password instead of your own login and password
+
+----
+$DEMO_HOME/scripts/util-create-pull-secret.sh registry-redhat-io --project petclinic-cicd -u <USER> -p <PASS> 
+----
+
+5. Run the following script to setup the entire cicd project (it will create a project called `<PROJECT_PREFIX>-cicd` (where `<PROJECT_PREFIX>` is the value passed to --project-prefix in the command below) if it doesn't exist already to install all the artifacts into
+
+WARNING: This must be run *after* the corresponding development environment (e.g. petclinic-dev) has been created or the script will fail.  This is due to the cicd pipeline needing to update the permissions of the pipeline service account to be able to "see into and change" (e.g. edit) the dev project
+
+----
+$DEMO_HOME/scripts/create-cicd.sh install --project-prefix petclinic
+----
+
+== Setup "Staging" Environment ==
+
+1. Create a new project
+
+[red]#FIXME: provide real values#
+----
+oc process -f $DEMO_HOME/kube/staging-project-template.yaml -p APP_NAME=jws-app -p DEVELOPMENT_PROJECT=test-petclinic4 -p STAGING_PROJECT=petclinic-stage -p PROJECT_NAME=test-petclinic4 | oc apply -f -
+----
+
+2. Create MySQL cluster (assumes MySQL Operator already running in cluster)
+
+----
+$DEMO_HOME/scripts/create-sql-cluster.sh
+----
+
+[red]#FIXME: This pipeline needs to be setup in the ci/cd environment either from the script run to create the staging environment or now
+2. Create pipeline for staging (including creation of a local custom task)
+
+[red]#FIXME: provide real values for parameters#
+----
+ oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p DEV_APP_NAME=jws-app -p APP_NAME=jws-app -p PROJECT_NAME=test-petclinic4 -p STAGING_PROJECT=petclinic-stage -p DEVELOPMENT_PROJECT=test-petclinic4 | oc apply -f -
+
+ oc apply -f $DEMO_HOME/kube/tekton/tasks/oc-task.yaml -n test-petclinic4
+
+ oc policy add-role-to-user edit system:serviceaccount:test-petclinic4:pipeline -n petclinic-stage
+----
+
+=== Setup Git Triggers ===
+
+Tekton allows for `EventListeners`, `TriggerTemplates`, and `TriggerBindings` to allow a git repo to hit a webhook and trigger a build.  See also link:https://github.com/tektoncd/triggers[here].  To get basic triggers going for both gogs and github run the following:
+
+NOTE: For an example of triggers working with Tekton, see files link:https://github.com/siamaksade/tekton-cd-demo/tree/master/triggers[in the template directory of this repo]
+
+NOTE: You may also want to consider link:https://github.com/tektoncd/experimental/blob/master/webhooks-extension/docs/GettingStarted.md[this tekton dashboard functionality]
+
+Create pipeline resources for trigger
+
+----
+oc apply -f $DEMO_HOME/kube/tekton/resources
+----
+
+Create trigger
+
+----
+oc apply -f $DEMO_HOME/kube/tekton/triggers
+----
+
+==== Troubleshooting ====
+
+If the trigger doesn't appear to fire, then check the logs of the pod that is running that represents the webhook.  The probably is likely in the `PipelineRun` template.
+
+=== Setting up Nexus ===
+
+Builds can be up to 4 minutes faster using Nexus, however, due to some non-maven central repos some custom configuration may be necessary after initial setup.  If you run into issues then check <<Missing Repos,the steps here>>
+
+A good example on how to get this running with SpringBoot is link:https://github.com/siamaksade/tekton-cd-demo[here].  For the purposes of this demo, in general, to use nexus do the following:
+
+1. Deploy nexus in the same project as your pipeline
+
+----
+oc apply -f $DEMO_HOME/kube/nexus/nexus.yaml
+----
+
+2. Patch the pipeline to use the nexus mirror (again, assuming installation in the same project as the pipeline)
+
+----
+oc patch pipeline/petclinic-deploy-dev-tomcat --type='json' -p '[{"op": "add", "path": "/spec/tasks/0/params/1", "value": {"name": "MAVEN_MIRROR_URL","value": "http://nexus:8081/repository/maven-public/" } }]'
+
+----
+
+Depending on the tasks in your pipeline, some tasks (like maven test) require the setting of a `MAVEN_SETTINGS_CONFIGMAP` variable which is meant to name a configmap on the cluster that refers to a settings.xml that should be used in the maven run.
+
+See link:kube/nexus/configmap-custom-maven-settings.yaml[this] file for an example configmap to use the nexus repo.
+
+----
+oc apply -f $DEMO_HOME/kube/nexus/configmap-custom-maven-settings.yaml
+----
+
+=== Troubleshooting ===
+
+==== Images missing ====
+
+If after your (re)build you find that an image you changed is not appearing, attempt to clear your cache.
+
+image:images/image-cached.png[]
+
+One way on chrome to do this is via the DevTools ( kbd:[F12] )
+
+image:images/devtools-disablecache.png[]
+
+==== Release issues ====
+
+If you get errors when releasing, check the pipeline run logs using this command:
+
+----
+tkn pipelinerun logs petclinic-dev-pipeline-tomcat-run-mxgt4 -t release-app
+----
+
+If you see the following in the log output then you either need to fix the version number increment or change the nexus repository to allow updates
+----
+[release-app : mvn] [ERROR] Failed to execute goal org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy (default-deploy) on project spring-framework-petclinic: Failed to deploy artifacts: Could not transfer artifact org.springframework.samples:spring-framework-petclinic:war:5.2.4 from/to nexus (http://nexus:8081/repository/maven-releases/): Transfer failed for http://nexus:8081/repository/maven-releases/org/springframework/samples/spring-framework-petclinic/5.2.4/spring-framework-petclinic-5.2.4.war 400 Repository does not allow updating assets: maven-releases -> [Help 1]
+----
+
+Log into nexus as an admin, select the maven releases repo, and make sure _Allow redeploy_ is set under _Deployment policy_
+
+image:images/nexus-allow-redeploy.png[]
+
+==== Missing Repos ====
+
+Builds using nexus fail with errors like this:
+
+----
+[INFO] Downloading: http://nexus:8081/repository/maven-public/org/springframework/data/spring-data-jdbc-core/2.0.0.M1/spring-data-jdbc-core-2.0.0.M1.pom
+[WARNING] The POM for org.springframework.data:spring-data-jdbc-core:jar:2.0.0.M1 is missing, no dependency information available
+----
+
+The original petclinic app uses some repos outside of maven central.  Namely:
+
+* https://maven.repository.redhat.com/earlyaccess/all/
+* https://repo.spring.io/milestone/
+
+You need to manually configure these repos in nexus.
+
+1. Connect to the nexus instance (see route) 
+
+2. Log into the nexus instance (standard nexus setup has admin, admin123)
+
+3. Go to _Repositories_ and _Create Repository_ for each of the repos needed
+
+image:images/nexus-repositories.png[]
+
+4. Here's example configuration for each of the above
+
+image:images/nexus-spring-repo.png[Spring]
+image:images/nexus-redhat.png[Red Hat]
+
+5. You might need to add each site's certificate to the Nexus trust store.  This can be done by clicking on _View Certificate_ and using the _+_ to add to truststore
+
+==== Logs ====
+
+You can see limited logs in the Tekton UI, but if you want the full logs, you can access these from the command line using the `tkn` command
+
+----
+# Get the list of pipelineruns in the current project
+tkn pipelinerun list
+
+# Output the full logs of the named pipeline run (where petclinic-deploy-dev-run-j7ktj is a pipeline run name )
+tkn pipelinerun logs petclinic-deploy-dev-run-j7ktj
+----
 
 == EB Environment ==
 
@@ -196,6 +418,30 @@ Printing Status:
 2020-03-13 08:05:57    INFO    createEnvironment is starting.
 ...
 
+----
+
+== Tomcat Instance Troubleshooting ==
+
+You can find the tomcat home directory at `/usr/share/tomcat`.  See the `logs/catalina.out` for the most recent logfile.
+
+To restart the server, use
+
+----
+sudo service tomcat8 restart
+----
+
+== RDS Debugging ==
+
+Access databases by using SSH to the RDS instance and forwarding port 3306 locally through to the database server
+
+----
+ ssh -i "mwh-bastion.pem" ec2-user@ec2-13-210-144-99.ap-southeast-2.compute.amazonaws.com -L 3306:aa3s38alasq0v1.cjpxzung9qid.ap-southeast-2.rds.amazonaws.com:3306
+----
+
+Then use the adminer pod to debug
+
+----
+docker run -p 8080:8080 -e ADMINER_DEFAULT_SERVER=docker.for.mac.localhost adminer:latest
 ----
 
 == AWS Pipeline ==

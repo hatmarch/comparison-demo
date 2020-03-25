@@ -16,6 +16,7 @@
 		//"redhat.vscode-xml",
 		"joaompinto.asciidoctor-vscode",
 		"ms-kubernetes-tools.vscode-kubernetes-tools",
+		"redhat.vscode-tekton-pipelines",
 		// REST CLIENT for querying elastic search
 		"humao.rest-client"
 	],
