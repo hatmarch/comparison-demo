@@ -336,6 +336,10 @@ image:images/nexus-redhat.png[Red Hat]
 
 5. You might need to add each site's certificate to the Nexus trust store.  This can be done by clicking on _View Certificate_ and using the _+_ to add to truststore
 
+6. Add the two registries to the maven-public group as per the screenshot
+
+image:images/nexus-maven-public.png[]
+
 ==== Logs ====
 
 You can see limited logs in the Tekton UI, but if you want the full logs, you can access these from the command line using the `tkn` command
@@ -346,6 +350,12 @@ tkn pipelinerun list
 
 # Output the full logs of the named pipeline run (where petclinic-deploy-dev-run-j7ktj is a pipeline run name )
 tkn pipelinerun logs petclinic-deploy-dev-run-j7ktj
+----
+
+To output the logs of a currently running pipelinerun (`pr`) and follow them, use:
+
+----
+tkn pr logs -L -f
 ----
 
 == EB Environment ==
