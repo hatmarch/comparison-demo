@@ -21,9 +21,9 @@ spec:
       type: git
   steps:
     - name: mvn
-      image: gcr.io/cloud-builders/mvn
+      image: quay.io/mhildenb/jboss-webserver31-tomcat8-openshift-base:1.0
       workingDir: /workspace/source
-      command: ["/usr/bin/mvn"]
+      command: ["./mvnw"]
       args:
         - -Dmaven.repo.local=$(workspaces.maven-repo.path)
         - -s
