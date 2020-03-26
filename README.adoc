@@ -178,51 +178,62 @@ NOTE: See also tips and tricks from the link:https://github.com/openshift/pipeli
 
 === CI/CD Project Install ===
 
-3. Create the CI/CD project
+A good example on how to get this running with SpringBoot is link:https://github.com/siamaksade/tekton-cd-demo[here].  This demo is heavily based on it.
 
-----
-oc new-project petclinic-cicd
-----
+4. Run the following script to setup the entire cicd project (it will create a project called `<PROJECT_PREFIX>-cicd` (where `<PROJECT_PREFIX>` is the value passed to --project-prefix in the command below) if it doesn't exist already to install all the artifacts into.
 
-4. Create a pull secret for registry.redhat.io.  This is needed for the s2i images.  It will basically associate this secret with the pipelines service account.  NOTE: you can use a redhat registry server account name and password instead of your own login and password
-
-----
-$DEMO_HOME/scripts/util-create-pull-secret.sh registry-redhat-io --project petclinic-cicd -u <USER> -p <PASS> 
-----
-
-5. Run the following script to setup the entire cicd project (it will create a project called `<PROJECT_PREFIX>-cicd` (where `<PROJECT_PREFIX>` is the value passed to --project-prefix in the command below) if it doesn't exist already to install all the artifacts into
+The `<USER>` and `<PASSWORD>` that is passed in is the user and password needed to create a pull secret for registry.redhat.io.  This is needed for the s2i images.  It will basically associate this secret with the pipelines service account.  NOTE: you can use a redhat registry server account name and password instead of your own login and password
 
 WARNING: This must be run *after* the corresponding development environment (e.g. petclinic-dev) has been created or the script will fail.  This is due to the cicd pipeline needing to update the permissions of the pipeline service account to be able to "see into and change" (e.g. edit) the dev project
 
 ----
-$DEMO_HOME/scripts/create-cicd.sh install --project-prefix petclinic
+$DEMO_HOME/scripts/create-cicd.sh install --project-prefix petclinic --user USER --password <PASSWORD>
 ----
+
+=== Manually configuring Nexus ===
+
+image:images/nexus-maven-public.png[]
+
+The original petclinic app uses some repos outside of maven central.  Namely:
+
+* https://maven.repository.redhat.com/earlyaccess/all/
+* https://repo.spring.io/milestone/
+
+You need to manually configure these repos in nexus.
+
+1. Connect to the nexus instance (see route) 
+
+----
+echo "http://$(oc get route nexus -n petclinic-cicd -o jsonpath='{.spec.host}')/"
+----
+
+2. Log into the nexus instance (standard nexus setup has admin, admin123)
+
+3. Go to _Repositories_ and _Create Repository_ for each of the repos needed
+
+image:images/nexus-repositories.png[]
+
+4. Here's example configuration for each of the above
+
+image:images/nexus-spring-repo.png[Spring]
+image:images/nexus-redhat.png[Red Hat]
+
+5. You might need to add each site's certificate to the Nexus trust store.  This can be done by clicking on _View Certificate_ and using the _+_ to add to truststore
+
+6. Add the two registries to the maven-public group as per the screenshot
+
+[red]#FIXME: This is necessary until every build gets a semantic version number update#
+
+7. Update the `maven-releases` repo to allow updates like below:
+
+image:images/nexus-repo-allow-redeploy.png[]
 
 == Setup "Staging" Environment ==
 
-1. Create a new project
-
-[red]#FIXME: provide real values#
-----
-oc process -f $DEMO_HOME/kube/staging-project-template.yaml -p APP_NAME=jws-app -p DEVELOPMENT_PROJECT=test-petclinic4 -p STAGING_PROJECT=petclinic-stage -p PROJECT_NAME=test-petclinic4 | oc apply -f -
-----
-
-2. Create MySQL cluster (assumes MySQL Operator already running in cluster)
+Create the staging project with the following command.  The development project needs to exist before this command will succeed
 
 ----
-$DEMO_HOME/scripts/create-sql-cluster.sh
-----
-
-[red]#FIXME: This pipeline needs to be setup in the ci/cd environment either from the script run to create the staging environment or now
-2. Create pipeline for staging (including creation of a local custom task)
-
-[red]#FIXME: provide real values for parameters#
-----
- oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p DEV_APP_NAME=jws-app -p APP_NAME=jws-app -p PROJECT_NAME=test-petclinic4 -p STAGING_PROJECT=petclinic-stage -p DEVELOPMENT_PROJECT=test-petclinic4 | oc apply -f -
-
- oc apply -f $DEMO_HOME/kube/tekton/tasks/oc-task.yaml -n test-petclinic4
-
- oc policy add-role-to-user edit system:serviceaccount:test-petclinic4:pipeline -n petclinic-stage
+$DEMO_HOME/scripts/create-staging-full.sh install --project-prefix petclinic
 ----
 
 === Setup Git Triggers ===
@@ -249,34 +260,7 @@ oc apply -f $DEMO_HOME/kube/tekton/triggers
 
 If the trigger doesn't appear to fire, then check the logs of the pod that is running that represents the webhook.  The probably is likely in the `PipelineRun` template.
 
-=== Setting up Nexus ===
-
-Builds can be up to 4 minutes faster using Nexus, however, due to some non-maven central repos some custom configuration may be necessary after initial setup.  If you run into issues then check <<Missing Repos,the steps here>>
-
-A good example on how to get this running with SpringBoot is link:https://github.com/siamaksade/tekton-cd-demo[here].  For the purposes of this demo, in general, to use nexus do the following:
-
-1. Deploy nexus in the same project as your pipeline
-
-----
-oc apply -f $DEMO_HOME/kube/nexus/nexus.yaml
-----
-
-2. Patch the pipeline to use the nexus mirror (again, assuming installation in the same project as the pipeline)
-
-----
-oc patch pipeline/petclinic-deploy-dev-tomcat --type='json' -p '[{"op": "add", "path": "/spec/tasks/0/params/1", "value": {"name": "MAVEN_MIRROR_URL","value": "http://nexus:8081/repository/maven-public/" } }]'
-
-----
-
-Depending on the tasks in your pipeline, some tasks (like maven test) require the setting of a `MAVEN_SETTINGS_CONFIGMAP` variable which is meant to name a configmap on the cluster that refers to a settings.xml that should be used in the maven run.
-
-See link:kube/nexus/configmap-custom-maven-settings.yaml[this] file for an example configmap to use the nexus repo.
-
-----
-oc apply -f $DEMO_HOME/kube/nexus/configmap-custom-maven-settings.yaml
-----
-
-=== Troubleshooting ===
+=== General Troubleshooting ===
 
 ==== Images missing ====
 
@@ -287,58 +271,6 @@ image:images/image-cached.png[]
 One way on chrome to do this is via the DevTools ( kbd:[F12] )
 
 image:images/devtools-disablecache.png[]
-
-==== Release issues ====
-
-If you get errors when releasing, check the pipeline run logs using this command:
-
-----
-tkn pipelinerun logs petclinic-dev-pipeline-tomcat-run-mxgt4 -t release-app
-----
-
-If you see the following in the log output then you either need to fix the version number increment or change the nexus repository to allow updates
-----
-[release-app : mvn] [ERROR] Failed to execute goal org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy (default-deploy) on project spring-framework-petclinic: Failed to deploy artifacts: Could not transfer artifact org.springframework.samples:spring-framework-petclinic:war:5.2.4 from/to nexus (http://nexus:8081/repository/maven-releases/): Transfer failed for http://nexus:8081/repository/maven-releases/org/springframework/samples/spring-framework-petclinic/5.2.4/spring-framework-petclinic-5.2.4.war 400 Repository does not allow updating assets: maven-releases -> [Help 1]
-----
-
-Log into nexus as an admin, select the maven releases repo, and make sure _Allow redeploy_ is set under _Deployment policy_
-
-image:images/nexus-allow-redeploy.png[]
-
-==== Missing Repos ====
-
-Builds using nexus fail with errors like this:
-
-----
-[INFO] Downloading: http://nexus:8081/repository/maven-public/org/springframework/data/spring-data-jdbc-core/2.0.0.M1/spring-data-jdbc-core-2.0.0.M1.pom
-[WARNING] The POM for org.springframework.data:spring-data-jdbc-core:jar:2.0.0.M1 is missing, no dependency information available
-----
-
-The original petclinic app uses some repos outside of maven central.  Namely:
-
-* https://maven.repository.redhat.com/earlyaccess/all/
-* https://repo.spring.io/milestone/
-
-You need to manually configure these repos in nexus.
-
-1. Connect to the nexus instance (see route) 
-
-2. Log into the nexus instance (standard nexus setup has admin, admin123)
-
-3. Go to _Repositories_ and _Create Repository_ for each of the repos needed
-
-image:images/nexus-repositories.png[]
-
-4. Here's example configuration for each of the above
-
-image:images/nexus-spring-repo.png[Spring]
-image:images/nexus-redhat.png[Red Hat]
-
-5. You might need to add each site's certificate to the Nexus trust store.  This can be done by clicking on _View Certificate_ and using the _+_ to add to truststore
-
-6. Add the two registries to the maven-public group as per the screenshot
-
-image:images/nexus-maven-public.png[]
 
 ==== Logs ====
 
