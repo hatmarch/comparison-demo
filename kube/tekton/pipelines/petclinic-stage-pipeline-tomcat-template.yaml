@@ -29,11 +29,11 @@ parameters:
 - description: The name of the staging application (or image stream)
   displayName: Application Name (Staging)
   name: APP_NAME
-  value: petclinic
+  value: jws-app
 - description: The name of the development application (or image stream)
   displayName: Application Name (Dev)
   name: DEV_APP_NAME
-  value: petclinic
+  value: jws-app
 objects:
 - apiVersion: tekton.dev/v1alpha1
   kind: Pipeline
