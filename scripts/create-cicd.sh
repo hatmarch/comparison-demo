@@ -105,11 +105,15 @@ command.install() {
   # Also need to update to match git resources
   sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/pipelines/petclinic-dev-pipeline-tomcat.yaml | oc apply -f - -n $cicd_prj
   #sed "s/demo-dev/$dev_prj/g" pipelines/pipeline-deploy-stage.yaml | sed -E "s/demo-stage/$stage_prj/g" | oc apply -f - -n $cicd_prj
-  sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/pipelines/petclinic-image-resource.yaml | oc apply -f - -n $cicd_prj
+  
+  # Install pipeline resources
+  sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/resources/app-image.yaml | oc apply -f - -n $cicd_prj
   
   # FIXME: Decide which repo we want to trigger/pull from
   # sed "s#https://github.com/spring-projects/spring-petclinic#http://$GOGS_HOSTNAME/gogs/spring-petclinic.git#g" pipelines/petclinic-git-resource.yaml | oc apply -f - -n $cicd_prj
   
+  oc apply -f $DEMO_HOME/kube/tekton/resources
+
   # Install pipeline triggers
   oc apply -f $DEMO_HOME/kube/tekton/triggers -n $cicd_prj
 
