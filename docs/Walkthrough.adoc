@@ -216,6 +216,30 @@ WARNING: This section assumes that the petclinic-cicd project has been created. 
 
 ==== Trigger deployment from code pipeline? ====
 
+6. Once dev build is working, show that this can be deployed to staging by executing the deploy to staging pipeline
+
+----
+tkn p start petclinic-deploy-stage-tomcat -n petclinic-cicd                                                          
+? Value for param `IMAGE_TAG` of type `string`? (Default is `latest`) latest
+Pipelinerun started: petclinic-deploy-stage-tomcat-run-fhzh5
+----
+
+==== Rollback with pipelines ====
+
+7. You can show rollback to a previous version by making sure that previous version is tagged
+
+----
+$ oc tag petclinic-dev/jws-app@sha256:e7d058394a1876d68f36d1851e907552738fe5033fdcdca81509abfbabac5c77 petclinic-dev/jws-app:1.0
+Tag petclinic-dev/jws-app:1.0 set to petclinic-dev/jws-app@sha256:e7d058394a1876d68f36d1851e907552738fe5033fdcdca81509abfbabac5c77.
+$ tkn p start petclinic-deploy-stage-tomcat -n petclinic-cicd                                                          
+? Value for param `IMAGE_TAG` of type `string`? (Default is `latest`) 1.0
+Pipelinerun started: petclinic-deploy-stage-tomcat-run-fhzh5
+
+In order to track the pipelinerun progress run:
+tkn pipelinerun logs petclinic-deploy-stage-tomcat-run-fhzh5 -f -n petclinic-cicd
+$ tkn pr logs -L -f -n petclinic-cicd   
+----
+
 == Production Environments ==
 
 Show how we create additional environments and update pipeline to be able to deploy into these

@@ -100,9 +100,9 @@ command.install() {
 
   info "Deploying app to $stage_prj namespace"
   oc tag $dev_prj/jws-app:latest $stage_prj/jws-app:latest
-  oc apply -f $DEMO_HOME/kube/app -n $stage_prj
-  oc set image deployment/jws-app spring-petclinic=image-registry.openshift-image-registry.svc:5000/$stage_prj/jws-app:latest -n $stage_prj
-
+  oc process -f $DEMO_HOME/kube/staging/staging-project-template.yaml -p STAGING_PROJECT=$stage_prj \
+    -p APP_NAME=jws-app | oc apply -f - -n $stage_prj
+  
   cat <<-EOF
 
 ############################################################################

@@ -54,7 +54,7 @@ objects:
       - name: COMMANDS
         value: |
             oc tag ${DEVELOPMENT_PROJECT}/${DEV_APP_NAME}:$(params.IMAGE_TAG) ${STAGING_PROJECT}/${APP_NAME}:latest
-            oc rollout status deployment/${APP_NAME} -n ${STAGING_PROJECT}
+            oc rollout status deploymentconfig/${APP_NAME} -n ${STAGING_PROJECT}
     - name: test
       taskRef:
         name: openshift-client

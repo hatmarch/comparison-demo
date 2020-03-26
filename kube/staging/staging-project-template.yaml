@@ -9,27 +9,17 @@ metadata:
       Creates an apache server to act as a proxy to turn insecure https into http (with a bearer token)
     tags: "monitoring"
     iconClass: "fa fa-exchange"
-message: "Creating staging pipeline in $PROJECT_NAME"
+message: "Creating staging workloads"
 parameters:
-- description: The name of the project the pipeline will be installed to
-  displayName: Name of CI/CD project
-  name: PROJECT_NAME
-  value: petclinic-cicd
-  required: true
 - description: The name of the staging project
   displayName: Staging Project
   name: STAGING_PROJECT
   value: petclinic-staging
   required: true
-- description: The name of the development project
-  displayName: Development Project
-  name: DEVELOPMENT_PROJECT
-  value: petclinic-dev
-  required: true
 - description: The name of the application (ImageStream)
   displayName: Application Name
   name: APP_NAME
-  value: petclinic-dev
+  value: petclinic
   required: true
 objects:
 - kind: Namespace
