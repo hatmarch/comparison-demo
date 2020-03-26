@@ -84,13 +84,13 @@ command.install() {
   # oc get ns $dev_prj 2>/dev/null  || { 
   #   oc new-project $dev_prj
   #}
-  # oc get ns $stage_prj 2>/dev/null  || { 
-  #   oc new-project $stage_prj 
-  # }
+  oc get ns $stage_prj 2>/dev/null  || { 
+    oc new-project $stage_prj 
+  }
 
   info "Configure service account permissions for pipeline"
   oc policy add-role-to-user edit system:serviceaccount:$cicd_prj:pipeline -n $dev_prj
-  # oc policy add-role-to-user edit system:serviceaccount:$cicd_prj:pipeline -n $stage_prj
+  oc policy add-role-to-user edit system:serviceaccount:$cicd_prj:pipeline -n $stage_prj
 
   info "Deploying CI/CD infra to $cicd_prj namespace"
   oc apply -R -f $DEMO_HOME/kube/cd -n $cicd_prj
@@ -104,15 +104,14 @@ command.install() {
   # FIXME: Replace with template call
   # Also need to update to match git resources
   sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/pipelines/petclinic-dev-pipeline-tomcat.yaml | oc apply -f - -n $cicd_prj
-  #sed "s/demo-dev/$dev_prj/g" pipelines/pipeline-deploy-stage.yaml | sed -E "s/demo-stage/$stage_prj/g" | oc apply -f - -n $cicd_prj
+  oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template -p PROJECT_NAME=$cicd_prj -p DEVELOPMENT_PROJECT=$dev_prj | oc apply -f - -n $cicd_prj
   
   # Install pipeline resources
   sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/resources/app-image.yaml | oc apply -f - -n $cicd_prj
   
   # FIXME: Decide which repo we want to trigger/pull from
-  # sed "s#https://github.com/spring-projects/spring-petclinic#http://$GOGS_HOSTNAME/gogs/spring-petclinic.git#g" pipelines/petclinic-git-resource.yaml | oc apply -f - -n $cicd_prj
-  
-  oc apply -f $DEMO_HOME/kube/tekton/resources
+  # sed "s#https://github.com/spring-projects/spring-petclinic#http://$GOGS_HOSTNAME/gogs/spring-petclinic.git#g" $DEMO_HOME/kube/tekton/resources/app-git.yaml | oc apply -f - -n $cicd_prj
+  oc apply -f $DEMO_HOME/kube/tekton/resources/app-git.yaml
 
   # Install pipeline triggers
   oc apply -f $DEMO_HOME/kube/tekton/triggers -n $cicd_prj
