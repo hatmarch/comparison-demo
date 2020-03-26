@@ -28,7 +28,8 @@ spec:
         resource: app-git
     params:
     - name: GOALS
-      value: ["package"]
+      value:
+      - package
     - name: MAVEN_SETTINGS_CONFIGMAP
       value: custom-maven-settings
   - name: build-image
@@ -42,6 +43,8 @@ spec:
       value: "false"
     - name: MAVEN_MIRROR_URL
       value: $(params.MAVEN_MIRROR_URL)
+    - name: MAVEN_ARGS_APPEND
+      value: "-Popenshift"
     resources:
       inputs:
       - name: source
