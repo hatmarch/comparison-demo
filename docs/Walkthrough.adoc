@@ -16,6 +16,12 @@ code .
 
 VSCode will open.  Indicate that you want to run in a container.
 
+Then you want to make sure you are in the `trigger-test` branch
+
+----
+git checkout trigger-test
+----
+
 Next compile the application locally (NOTE: The HSQLDB will use local in memory database)
 
 ----
@@ -63,8 +69,7 @@ image:../images/tomcat-debug.png[]
 
 5. Go to the remote tab (on the left side) and go down to the forwarded ports panel.  Pick to have 8080 forwarded.  Then hit the globe icon to open a browser to that port.
 
-
-POTENTIALLY: Loop around to show CRC running on local laptop?
+image:../images/port-forward.png[]
 
 == Development Environment Creation ==
 
