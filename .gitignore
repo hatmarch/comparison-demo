@@ -1,5 +1,11 @@
 .DS_Store
 .git/**
+.m2-spring-petclinic/**
+
+# this file is just to allow the folder to exist, the spring-petclinic
+# submodule uses this
+!.m2-spring-petclinic/.gitkeep
+
 
 docker-secrets/
 
