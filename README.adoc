@@ -1,6 +1,15 @@
 = Comparison Demo: AWS and Openshift =
 :experimental:
 
+[WARNING]
+====
+Make sure you run the following command before executing any of these commands.
+
+----
+source scripts/shell-setup.sh 
+----
+====
+
 == MySQL Setup ==
 
 First install the operator
