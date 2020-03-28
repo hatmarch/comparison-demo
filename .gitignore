@@ -1,6 +1,7 @@
 .DS_Store
 .git/**
 .m2-spring-petclinic/**
+.vscode/
 
 # this file is just to allow the folder to exist, the spring-petclinic
 # submodule uses this
