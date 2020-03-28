@@ -23,6 +23,7 @@
 	],
 	"settings":{
 		"terminal.integrated.shell.linux": "/bin/zsh",
+		"workbench.colorTheme": "Visual Studio Dark",
 		"vs-kubernetes": { 
 			"vs-kubernetes.namespace": "", 
 			"vs-kubernetes.kubectl-path": "/usr/bin/kubectl", 
