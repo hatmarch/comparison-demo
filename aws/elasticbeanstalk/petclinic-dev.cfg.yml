@@ -1,0 +1,46 @@
+AWSConfigurationTemplateVersion: 1.1.0.0
+EnvironmentConfigurationMetadata:
+  DateCreated: '1584084777000'
+  DateModified: '1584086148912'
+  Description: PetClinic Dev Environment
+EnvironmentTier:
+  Name: WebServer
+  Type: Standard
+Extensions:
+  RDS.EBConsoleSnippet:
+    Order: null
+    SourceLocation: https://s3.ap-southeast-2.amazonaws.com/elasticbeanstalk-env-resources-ap-southeast-2/eb_snippets/rds/rds.json
+OptionSettings:
+  AWSEBAutoScalingLaunchConfiguration.aws:autoscaling:launchconfiguration:
+    EC2KeyName: mwh-bastion
+  AWSEBAutoScalingLaunchConfiguration.aws:ec2:vpc:
+    AssociatePublicIpAddress: true
+  AWSEBLoadBalancerSecurityGroup.aws:ec2:vpc:
+    VPCId: vpc-5bf6de3c
+  AWSEBV2LoadBalancerTargetGroup.aws:elasticbeanstalk:environment:process:default:
+    MatcherHTTPCode: '200'
+    Port: '8080'
+  aws:autoscaling:launchconfiguration:
+    IamInstanceProfile: aws-elasticbeanstalk-ec2-role
+    SecurityGroups: sg-41ac543e
+  aws:ec2:vpc:
+    DBSubnets: subnet-581d1011,subnet-be2f3fd9
+    ELBSubnets: subnet-581d1011,subnet-be2f3fd9
+    Subnets: subnet-581d1011,subnet-be2f3fd9
+  aws:elasticbeanstalk:environment:
+    LoadBalancerType: application
+    ServiceRole: arn:aws:iam::182449301782:role/aws-elasticbeanstalk-service-role
+  aws:elasticbeanstalk:healthreporting:system:
+    SystemType: enhanced
+  aws:rds:dbinstance:
+    DBEngine: mysql
+    DBPassword: petclinic
+    DBUser: pc
+    MultiAZDatabase: true
+  aws:elasticbeanstalk:container:tomcat:jvmoptions:
+    JVM Options: '-Ddb.url=jdbc:mysql://\$\{RDS_HOSTNAME\}:\$\{RDS_PORT\}/?useUnicode=true'
+Platform:
+  PlatformArn: arn:aws:elasticbeanstalk:ap-southeast-2::platform/Tomcat 8.5 with Java
+    8 running on 64bit Amazon Linux/3.3.3
+Tags:
+  Demo: mhildenb-petclinic

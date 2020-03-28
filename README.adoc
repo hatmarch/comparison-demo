@@ -290,7 +290,7 @@ To output the logs of a currently running pipelinerun (`pr`) and follow them, us
 tkn pr logs -L -f
 ----
 
-== EB Environment ==
+== Elastic Beanstalk Setup ==
 
 _From helloworld-pipeline example link:https://medium.com/@xoor/deploying-a-node-js-app-to-aws-elastic-beanstalk-681fa88bac53[here]_
 
@@ -298,15 +298,66 @@ Run the following script and answer the prompts as per the link above
 
 NOTE: When using eb deploy it appears you must first *commit* (but not push) into the (local) git repo that is referenced in the .git of the folder that you eb initialized in.  The branch it looks to is in .elasticbeanstalk/config.yml.
 
-== Connecting to existing EB Environment with CLI ==
+=== Connecting to existing EB Environment with CLI ===
 
 NOTE: See information on link:https://stackoverflow.com/questions/28821632/how-to-configure-eb-cli-with-eb-env-that-is-already-running[this page here].
 
+WARNING: You need to have the eb cli installed for this to work.  The devcontainer for the compatibility project does have these scripts installed so you should be able to run them from there.
+
 1. Change to the directory with the git repo that is deployed to eb
 2. run `eb init --profile $AWS_PROFILE`
-3. Select the application you want to use
+3. Answer the prompts selecting the appropriate region that you want to use
 
-== Saving a configuration with the CLI ==
+=== Creating a new EB application ===
+
+NOTE: Each environment (Dev and Staging) can take 15-20 minutes to create
+
+Navigate to the following directory under the compatibility demo:
+
+----
+cd $DEMO_HOME/spring-framework-petclinic/
+----
+
+Follow the instructions for <<Connecting to existing EB Environment with CLI,Connecting to existing EB Environment with CLI>> but select a new application.  Ensure that you choose the proper region.  I shouldn't matter what type of application you create.
+
+Next, run the following script to create a dev environment (use the -n flag if you'd like an application name other than PetClinic)
+
+[red]#FIXME: There may be some parts of the configuration file `$DEMO_HOME/aws/elasticbeanstalk/petclinic-dev.cfg.yml` that 
+are still specific to my installation (e.g. bastion ssh key) that still need to be parameterized in the script#
+
+----
+$DEMO_HOME/workspaces/comparison-demo/scripts/aws-create-beanstalk.sh 
+----
+
+=== Elastic Beanstalk Appendix ===
+
+==== Troubleshooting: ssh Access ====
+
+You can connect to an instance to debug and troubleshoot it by running this command (where `PetClinic-dev` is the name of the environment that you've created)
+
+NOTE: You must have whatever key you referenced in the petclinic config available to the environment (see `.devcontainer`, it's assumed the key is available in the host's `.ssh` directory)
+
+----
+eb ssh PetClinic-dev
+----
+
+You can find the tomcat logs in the following directory:
+
+----
+cd /usr/share/tomcat8/logs
+tail -f catalina.out
+----
+
+You can restart the webserver with
+
+----
+cd /usr/share/tomcat8
+# clear out the old logs
+sudo rm logs/catalina.out
+sudo service tomcat8 restart
+----
+
+==== Saving a configuration with the CLI ====
 
 As long as you have <<Connecting to existing EB Environment with CLI,linked an EB application to the CLI>> you can download a configuration using the EB CLI eb config command, as shown in the following example. NAME is the name of your saved configuration.
 
@@ -322,7 +373,7 @@ To get a list of configurations, run
 eb config list
 ----
 
-== Updating a configuration with the CLI ==
+==== Updating a configuration with the CLI ====
 
 Once you have <<Saving a configuration with the CLI,downloaded a configuration>> you can edit that configuration locally and then update it.
 
@@ -334,51 +385,28 @@ Once you have <<Saving a configuration with the CLI,downloaded a configuration>>
 
 3. To apply the configuration, open the console (`eb console` or `eb console -debug` when in a container to get the command to print out the EB console URL)
 
-== Create from a configuration ==
 
 NOTE: For more information on the create command see link:https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-create.html[here]
 
-If you have a valid configuration file, you can use it to create a new environment with the `eb create` command
 
-For example, to use a (local or saved) cfg.yml file named `PetClinic3`
+==== RDS Debugging ====
 
-----
-$ eb create petclinic-clone --cfg PetClinic3
-Creating application version archive "app-200313_080552".
-Uploading petclinic-3/app-200313_080552.zip to S3. This may take a while.
-Upload Complete.
-Environment details for: petclinic-clone
-  Application name: petclinic-3
-  Region: ap-southeast-2
-  Deployed Version: app-200313_080552
-  Environment ID: e-qmxmyjbqr7
-  Platform: arn:aws:elasticbeanstalk:ap-southeast-2::platform/Tomcat 8.5 with Java 8 running on 64bit Amazon Linux/3.3.3
-  Tier: WebServer-Standard-1.0
-  CNAME: UNKNOWN
-  Updated: 2020-03-13 08:05:58.808000+00:00
-Printing Status:
-2020-03-13 08:05:57    INFO    createEnvironment is starting.
-...
-
-----
-
-== Tomcat Instance Troubleshooting ==
-
-You can find the tomcat home directory at `/usr/share/tomcat`.  See the `logs/catalina.out` for the most recent logfile.
-
-To restart the server, use
-
-----
-sudo service tomcat8 restart
-----
-
-== RDS Debugging ==
-
-Access databases by using SSH to the RDS instance and forwarding port 3306 locally through to the database server
+Access databases by using SSH to the RDS instance (or to any instance that has access to the RDS instance you want to access) and forwarding port 3306 locally through to the database server.  `mwh-bastion.pem` is the ssh cert you used to setup the EB environment
 
 ----
  ssh -i "mwh-bastion.pem" ec2-user@ec2-13-210-144-99.ap-southeast-2.compute.amazonaws.com -L 3306:aa3s38alasq0v1.cjpxzung9qid.ap-southeast-2.rds.amazonaws.com:3306
 ----
+
+[NOTE]
+====
+It may also be possible to use eb ssh to accomplish this using the eb cli
+
+----
+eb ssh -c "-L 3306:aa5pwvn1s0ap5r.cjpxzung9qid.ap-southeast-2.rds.amazonaws.com:3306"
+----
+
+except that running in a container it appears binding on the port doesn't work properly
+====
 
 Then use the adminer pod to debug
 
@@ -386,17 +414,20 @@ Then use the adminer pod to debug
 docker run -p 8080:8080 -e ADMINER_DEFAULT_SERVER=docker.for.mac.localhost adminer:latest
 ----
 
-== AWS Pipeline ==
+== AWS Pipeline Setup ==
 
-_From helloworld-pipeline example link:https://medium.com/@xoor/using-aws-codepipeline-to-automate-deployments-to-elasticbeanstalk-e80ca988ef70[here]_
+Before you setup the pipeline, you need to first setup a CodeCommit repo as well as setup all the target Elastic Beanstalk environments above.  Much of the instructions here are inspired from the helloworld-pipeline example link:https://medium.com/@xoor/using-aws-codepipeline-to-automate-deployments-to-elasticbeanstalk-e80ca988ef70[here]
 
-First create and name the pipeline
+1. Create the <<Prerequisite: Code Commit Repo, code commit repo>>
+
+2.  Create and name the pipeline
 
 * be sure to create a servicerole
 
 Then select your source (GitHub) in this case
 
-== AWS Code Commit ==
+
+=== Prerequisite: Code Commit Repo ===
 
 First, be sure to setup your access following instructions link:https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up.html[here].
 
@@ -404,5 +435,3 @@ First, be sure to setup your access following instructions link:https://docs.aws
 * generate a code commit keypair (see link:https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-ssh-unixes.html[Step 3 of this document] for more details on creating a keypair)
 * Create a CodeCommit repo
 * Copy the SSH key
-
-== AWS Code Deploy Agent ==
