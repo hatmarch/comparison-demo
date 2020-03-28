@@ -1,4 +1,5 @@
 = Comparison Walkthrough =
+:experimental:
 
 Premise: You have a (petclinic) spring application that you need to  host in the cloud.  Let’s look at how different facets of this are done in AWS and then in OpenShift
 
@@ -22,36 +23,39 @@ Then you want to make sure you are in the `trigger-test` branch
 git checkout trigger-test
 ----
 
+Make a change to the welcome.jsp file, mostly to give an excuse to checkin.  You can use kbd:[Cmd+ p] to quickly open it in vscode.
+
+Add the following after the `<h2>` tags:
+
+----
+<h3> Hello from vscode </h3>
+----
+
+[NOTE]
+.If showing AWS compilation next
+====
+If you war attempting to show AWS builds, this is a good time to push this to code commit given
+that the pipeline can take up to _18 minutes_ to run.  See link:../README.adoc[CodeCommit
+section of this doc]  for information on setting up a CodeCommit repo that is connected to a
+AWS Pipeline.
+
+----
+git commit -am"Add welcome header"
+git push git-codecommit.ap-southeast-2.amazonaws.com
+----
+
+where `git-codecommit.ap-southeast-2.amazonaws.com` is the name of the remote that points to the AWS CodeCommit repo.  You can see a list of the remotes using the `git remote` command
+
+AWS Pipeline can be found link:https://ap-southeast-2.console.aws.amazon.com/codesuite/codepipeline/pipelines/petclinic-pipeline/view?region=ap-southeast-2[here] ([red]#need to manually adjust this link#)
+
+====
+
 Next compile the application locally (NOTE: The HSQLDB will use local in memory database)
 
 ----
 ./mvnw package -PHSQLDB -DskipTests
 ----
 
-[NOTE]
-.If you really want to run from SQL
-====
-if you want to run from mysql locally, the MySQL profile expects to connect on docker.for.mac.localhost:3306.
-
-1. Build for MySQL: You'll need to use the `MySQL` profile
-
-----
-./mvnw package -PMySQL -DskipTests
-----
-
-Then choose one of the following DB options:
-
-** Run from a docker container 
-----
-docker run --name mysql-petclinic -e MYSQL_ROOT_PASSWORD=petclinic -e MYSQL_DATABASE=petclinic -p 3306:3306 mysql:5.7.8
-----
-
-** Run connected to the sqlserver in the dev directory
-
-----
-oc port-forward -n petclinic-dev svc/jws-app-sql 3306:3306
-----
-====
 
 3. Add a tomcat server
 
@@ -63,6 +67,8 @@ image:../images/tomcat-add.png[]
 
 * Enter the tomcat directory when prompted: `/opt/webserver`
 
+NOTE: If the tomcat server fails to appear, you can find some <<Troubleshooting Tomcat Server, troubleshooting steps here>> as well as a way to run the demo without the extension.
+
 4. Debug .war file by right clicking on the newly added tomcat server and selecting _Debug War Package_.  You should find the war in `target` subdirectory of the workspace.  Maven will also output where it put in the .war at the end of the `install` goal.
 
 image:../images/tomcat-debug.png[]
@@ -71,9 +77,90 @@ image:../images/tomcat-debug.png[]
 
 image:../images/port-forward.png[]
 
-== Development Environment Creation ==
+6. Notice that the welcome should show, but the image is incorrect
 
-How to get our application deployed to Dev
+image:../images/ugly-pet.png[]
+
+7. Correct the image by running the following from the base directory
+
+----
+example/change-pet-image.sh good-pets.png
+git commit -am"Fix pet image"
+git push git-codecommit.ap-southeast-2.amazonaws.com
+----
+
+[NOTE]
+====
+It might make sense to jump to the AWS pipeline and make sure the second checkin is paused by disabling one of the transitions that the first checkin has already been through.  You can do this by clicking on the transition and then giving a reason for disabling.
+
+image:../image/pause-pipeline.png[]
+
+AWS Pipeline can be found link:https://ap-southeast-2.console.aws.amazon.com/codesuite/codepipeline/pipelines/petclinic-pipeline/view?region=ap-southeast-2[here] ([red]#need to manually adjust this link#)
+====
+
+== Touring AWS ==
+
+=== Code Pipeline ===
+
+Show the different aspects of the code pipeline
+
+1. Overall Pipeline
+
+2. Pipeline build steps
+
+in vscode, use kbd:[cmd + p] to quickly open buildspec.yaml
+
+image:../images.aws-buildspec.png[]
+
+2. Pipeline Unit Test
+
+image:../images/pipeline-unittest.png[]
+
+3. Pipeline Deployment
+
+=== Elastic Beanstalk ===
+
+1. Dashboard
+
+* point out the two different environments
+
+* Point out that each environment has a different URL
+
+image:../images/aws-eb-dashboard.png[]
+
+2. Dev Configuration
+
+image:../images/aws-eb-configuration-overview.png[]
+
+3. Instances
+
+* point out that these are VMs that can be ssh'ed into
+
+* point out the different security groups that are used to isolate the different bits
+
+image:../images/aws-eb-instances.png[]
+
+3. Load Balancer
+
+image:../images/aws-eb-loadbalancer.png[]
+
+3. RDS
+
+image:../images/aws-eb-rds.png[]
+
+4. If time allows, show the options that need to be choosen when creating a new environment
+
+image:../images/aws-eb-new-env.png[]
+
+5. Finally, return to the pipeline and reject the bad image:
+
+image:../images/aws-pipeline-reject.png[]
+
+6. and then allow the previous change to flow through by re-enabling the pipeline
+
+== OpenShift: Development Environment Creation ==
+
+
 
 === OpenShift ===
 
@@ -280,3 +367,54 @@ CloudWatch
 See link:https://medium.com/logistimo-engineering-blog/tomcat-jvm-metrics-monitoring-using-prometheus-in-kubernetes-c313075af727[here] for getting information into Prometheus 
 
 == Debugging Application ==
+
+== Appendix ==
+
+=== Troubleshooting Tomcat Server ===
+
+If the tomcat extension fails to run, you can attempt the following:
+
+remote any old tomcat files
+
+----
+rm -f /opt/webserver/webse*
+----
+
+Attempt to readd tomcat to /opt/webserver per the instructions above
+
+if that still doesn't work, rebuild container.
+
+If all else fails, [blue]#you can run the tomcat server locally#.  Start in the project base directory and run
+
+----
+example/run-tomcat.sh start
+
+# Make sure there are no errors and wait until you see this prompt:
+**** [main] INFO  org.apache.catalina.startup.Catalina- Server startup in 13275 ms
+----
+
+When it starts up you should be able to expose the port as you would through the tomcat extension.  Stop the topcat server from that same command line with kbd:[ctrl + c] 
+
+=== Optional: Running with SQL locally ===
+
+If you want to run from mysql locally, the MySQL profile expects to connect on docker.for.mac.localhost:3306.
+
+1. Build for MySQL: You'll need to use the `MySQL` profile
+
+----
+./mvnw package -PMySQL -DskipTests
+----
+
+Then choose one of the following DB options:
+
+** Run from a docker container 
+
+----
+docker run --name mysql-petclinic -e MYSQL_ROOT_PASSWORD=petclinic -e MYSQL_DATABASE=petclinic -p 3306:3306 mysql:5.7.8
+----
+
+** Run connected to the sqlserver in the dev directory
+
+----
+oc port-forward -n petclinic-dev svc/jws-app-sql 3306:3306
+----
