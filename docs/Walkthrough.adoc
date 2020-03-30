@@ -7,6 +7,8 @@ Premise: You have a (petclinic) spring application that you need to  host in the
 
 Show our demo running locally 
 
+WARNING: First make sure your trigger-test branch is ready to go by running `$DEMO_HOME\spring-framework-petclinic\example\restore-demo.sh`.  This will put the right image in place and reset the contents of the welcome.jsp
+
 In a local shell, go to the springboot directory and run the following commands
 
 ----
@@ -18,6 +20,8 @@ code .
 VSCode will open.  Indicate that you want to run in a container.
 
 Then you want to make sure you are in the `trigger-test` branch
+
+WARNING: Once the terminal is up, make sure to copy the api login string from the appropriate cluster into your console
 
 ----
 git checkout trigger-test
@@ -56,22 +60,16 @@ Next compile the application locally (NOTE: The HSQLDB will use local in memory 
 ./mvnw package -PHSQLDB -DskipTests
 ----
 
+If you want to show debugging and the tomcat extension, follow the instructions <<Debugging with Tomcat,here>>.  Otherwise run the following from the project base directory:
 
-3. Add a tomcat server
+----
+example/run-tomcat.sh start
 
-NOTE: This section requires the use of the vscode extension `adashen.vscode-tomcat` and assumes you're running from within the `quay.io/mhildenb/comparison-demo-base:1.0` (dev) container
+# Make sure there are no errors and wait until you see this prompt:
+**** [main] INFO  org.apache.catalina.startup.Catalina- Server startup in 13275 ms
+----
 
-* From the vscode file explorer, look for the tomcat panel and mouse over the _+_ button on the right
-
-image:../images/tomcat-add.png[]
-
-* Enter the tomcat directory when prompted: `/opt/webserver`
-
-NOTE: If the tomcat server fails to appear, you can find some <<Troubleshooting Tomcat Server, troubleshooting steps here>> as well as a way to run the demo without the extension.
-
-4. Debug .war file by right clicking on the newly added tomcat server and selecting _Debug War Package_.  You should find the war in `target` subdirectory of the workspace.  Maven will also output where it put in the .war at the end of the `install` goal.
-
-image:../images/tomcat-debug.png[]
+When it starts up you should be able to expose the port as you would through the tomcat extension.  _NOTE: You can stop the topcat server from that same command line with kbd:[ctrl + c]_
 
 5. Go to the remote tab (on the left side) and go down to the forwarded ports panel.  Pick to have 8080 forwarded.  Then hit the globe icon to open a browser to that port.
 
@@ -93,7 +91,7 @@ git push git-codecommit.ap-southeast-2.amazonaws.com
 ====
 It might make sense to jump to the AWS pipeline and make sure the second checkin is paused by disabling one of the transitions that the first checkin has already been through.  You can do this by clicking on the transition and then giving a reason for disabling.
 
-image:../image/pause-pipeline.png[]
+image:../images/pause-pipeline.png[]
 
 AWS Pipeline can be found link:https://ap-southeast-2.console.aws.amazon.com/codesuite/codepipeline/pipelines/petclinic-pipeline/view?region=ap-southeast-2[here] ([red]#need to manually adjust this link#)
 ====
@@ -136,6 +134,28 @@ image:../images/aws-eb-configuration-overview.png[]
 
 * point out that these are VMs that can be ssh'ed into
 
+.From the ComparisonDemo shell
+----
+eb ssh
+
+INFO: Attempting to open port 22.
+INFO: SSH port 22 open.
+INFO: Running ssh -i /home/jboss/.ssh/mwh-bastion.pem ec2-user@13.210.14.53
+Last login: Sat Mar 28 02:38:00 2020 from 123.208.49.188
+ _____ _           _   _      ____                       _        _ _
+| ____| | __ _ ___| |_(_) ___| __ )  ___  __ _ _ __  ___| |_ __ _| | | __
+|  _| | |/ _` / __| __| |/ __|  _ \ / _ \/ _` | '_ \/ __| __/ _` | | |/ /
+| |___| | (_| \__ \ |_| | (__| |_) |  __/ (_| | | | \__ \ || (_| | |   <
+|_____|_|\__,_|___/\__|_|\___|____/ \___|\__,_|_| |_|___/\__\__,_|_|_|\_\
+                                       Amazon Linux AMI
+
+This EC2 instance is managed by AWS Elastic Beanstalk. Changes made via SSH 
+WILL BE LOST if the instance is replaced by auto-scaling. For more information 
+on customizing your Elastic Beanstalk environment, see our documentation here: 
+http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/customize-containers-ec2.html
+[ec2-user@ip-172-31-2-215 ~]$ 
+----
+
 * point out the different security groups that are used to isolate the different bits
 
 image:../images/aws-eb-instances.png[]
@@ -162,10 +182,15 @@ image:../images/aws-pipeline-reject.png[]
 
 === Prerequisite: Introduction to Operators ===
 
-1. Talk about the Operator market place and what it means for developers in terms of self service
+1. Start with the link:https://console-openshift-console.apps.comparison.openshifttc.com/dashboards[Dashboard of the cluster]
 
-** Service Mesh Operator
-** Crunchy DB
+image:../images/openshift-dashboard.png[]
+
+2. From the UI, opt to create our new project (which is the equivalent of an Elastic Beanstalk Environment for our purposes).
+
+1. Talk about the Operator marketplace and what it means for developers in terms of self service
+
+** For example: Crunchy DB
 
 2. Install (or Describe) the Pipelines Operator
 
@@ -175,24 +200,18 @@ image:../images/operator-pipelines.png[]
 
 ** Describe how this is an adapted Helm Chart
 
+Only move on to the next step when you see that the operators have successfully been copied into the the current environment
+
+image:../images/operator-installed.png[]
+
 === Initial Developer Build (with S2I) ===
 
 [ALERT]
 ==== 
-Switch to comparison demo vscode window
+Switch to comparison demo vscode window (dark theme)
 ====
 
-1. Create a new project.  [blue]#Describe that this is something like creating a new environment in elastic beanstalk or just in general.#
-
-----
-oc new-project petclinic-dev
-----
-
-2. Show the creation of a new MySQL cluster using the cluster YAML by first demonstrating that the operator is available
-
-image:../images/operator-installed.png[]
-
-Once the operator has been copied to our project, we are free to create the resources (CRD) that will create our cluster.  
+2. Once the operator has been copied to our project, we are free to create the resources (CRD) that will create our cluster. Show the creation of a new MySQL cluster using the cluster YAML 
 
 ** Hit kbd:[cmd+p] to quickly open `mysql-cluster-instance.yaml` and describe that this is all that is necessary to setup a database cluster on the kubernetes instance
 
@@ -225,45 +244,17 @@ image:../images/dev-from-catalog.png[]
 
 image:../images/dev-tomcat-template.png[]
 
-NOTE: Run either of these from the spring-boot vscode instance
+==== Install based on S2I ====
 
-[OPTION 1]
-.Install based on S2I
-====
-
-To create from a S2I template, use the following command
+To create from a S2I template, use the following command (or mine this information to fill in the corresponding information on the template).  [blue]#NOTE that this is coming from the github repo, _not_ codecommit#
 
 ----
 oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='https://github.com/hatmarch/spring-framework-petclinic.git' --param=SOURCE_REPOSITORY_REF='trigger-test' --param=CONTEXT_DIR='' 
 ----
 
-====
+NOTE: If you want to install based entirely on a binary build and skip the UI template part, see <<Initial Binary Build,instructions in Appendix>>
 
-[OPTION 2]
-.Install based on Binary
-====
-For more information on building from a binary that is created from this, perhaps see link:https://docs.openshift.com/container-platform/3.6/dev_guide/dev_tutorials/binary_builds.html[here] and especially link:http://v1.uncontained.io/playbooks/app_dev/binary_deployment_howto.html[here]
-
-To create from a pre-compiled binary, use the following command:
-
-----
-oc new-build jboss-webserver31-tomcat8-openshift:1.4 --binary=true --name=jws-app
-
-# setup the app first before building so that the steps of the build can be shown
-oc new-app jws-app --allow-missing-imagestream-tags=true
-oc apply -f $DEMO_HOME/kube/services/jws-app-binary.yaml
-
-# print out the route to the application
-echo "https://$(oc get route jws-app -o jsonpath='{.spec.host}')/"
-
-# Run from the root of the spring dev directory (could use --follow=true on this command if you want)
-oc start-build jws-app --from-file=target 
-
-----
-
-====
-
-4. Then can show the logs of the S2I running using this command
+4. Then can show the logs of the S2I running using this command (or finding from the UI)
 
 ----
 oc logs -f bc/jws-app
@@ -296,13 +287,54 @@ image:../images/developer-topology.png[]
 * Services 
 * Pods
 
+If the build is not yet finished, you can cancel it with the following command:
+
+----
+oc project petclinic-dev
+oc cancel-build $(oc get build -o custom-columns=NAME:.metadata.name --no-headers=true)
+----
+
+Once the build is cancelled, you can start a binary build [blue]#from the Spring-Petclinic vscode instance# with this command (from the root of the spring dev directory):
+
+----
+# NOTE append --follow=true on this command if you want to follow logs in window
+oc start-build jws-app --from-file=target -n petclinic-dev
+----
+
+[blue]#_build should take about 2.5 minutes_ #
+
 Show how more pods can be created, for example
 
 image:../images/dev-more-pods.png[]
 
+And see how those additional pods are referenced from the `service`
+
+=== Tagging ===
+
+Finally, for the sake of rollback later on, we're going to tag the current build *BEFORE* we start our pipeline.
+
+----
+oc tag jws-app:latest jws-app:1.0 -n petclinic-dev
+----
+
 == Continuous Integration ==
 
-WARNING: This section assumes that the petclinic-cicd project has been created.  See link:../README.adoc[README.adoc] for more details.
+[ALERT]
+====
+switch to ComparisonDemo vscode window 
+====
+
+[WARNING]
+====
+This section assumes that the petclinic-cicd project has been created.  See link:../README.adoc[README.adoc] for more details.
+
+If the operator is already installed, you can create the cicd environment with the following command (also linked to link:https://www.evernote.com/l/AWTspU8-e8VP4aXjgscTedmuK0aWrizaU4o[here]
+
+----
+$DEMO_HOME/scripts/create-cicd.sh install --project-prefix petclinic --user USER --password <PASSWORD>
+----
+
+====
 
 === Openshift ===
 
@@ -314,17 +346,15 @@ WARNING: This section assumes that the petclinic-cicd project has been created. 
     
     * Tasks
     * Trigger Events
+    * VS Code Extension
 
-==== Trigger build from internal repo ====
-
-4. Point out internal git repo
 
 ==== Trigger build from external repo ====
 
 1. Get the URL of the trigger event
 
 ----
-oc get route 
+echo "http://$(oc get route webhook-github -o jsonpath='{.spec.host}')/"
 ----
 
 1. Open the settings page of the github repo link:https://github.com/hatmarch/spring-framework-petclinic/settings/hooks/192601155[here]
@@ -348,6 +378,51 @@ Switch to spring-petclinic-vscode window
 
 image:../images/developer-pipeline-run.png[]
 
+4. Then run the checkin command
+
+----
+git commit -am"Pipeline Message"
+git push origin
+----
+
+5. Switch over to the OpenShift pipeline and notice its running
+
+* Point out different phases from the UI
+** Point out parallel analysis and unit test phases
+* Look at logs from console
+* from `ComparisonDemo` show the cli for tekton for follow the steps of the latest pipeline run
+
+----
+tkn pr logs -L -f
+----
+
+6. Play around with the existing petclinic app and show that it's not affected by the pipeline run
+
+* For demonstrating the environments are separate, add an Owner for the development environment
+
+image:../images/petclinic-add-owner.png[]
+
+6. Tour the cicd project that we created
+
+* Sonarqube
+* Internal Git Repo
+* Nexus Repository
+
+NOTE: [blue]#Build will take about 10 minutes to complete# This is a good time to discuss that OpenShift can also integrate with Jenkins Pipeline and pass to Tyrell
+
+7. Upon return, show from the Dev Perspective that a new build has been released replacing the S2I one we uploaded before
+
+==== Staging Environment and Deployment ====
+
+Next we want to create a staging environment that will house our build.
+
+1. First show that the staging environment is empty.
+
+2. Create the new staging environment (noting that the MySQL operator is already installed there) using the following script
+
+----
+$DEMO_HOME/scripts/create-staging-full.sh
+----
 
 ==== Trigger deployment from code pipeline? ====
 
@@ -375,14 +450,13 @@ image:../images/pipelines-deploy-to-staging-ui.png[]
 
 image:../images/openshift-staging-badge.png[]
 
+9. Query the list of owners, and show that the one we created earlier is not there.
 
-==== Rollback with pipelines ====
+==== Optional: Rollback with pipelines ====
 
-7. You can show rollback to a previous version by making sure that previous version is tagged
+7. You can show rollback to a previous version by making sure that previous version is tagged as per <<Tagging,here>>
 
 ----
-$ oc tag petclinic-dev/jws-app@sha256:e7d058394a1876d68f36d1851e907552738fe5033fdcdca81509abfbabac5c77 petclinic-dev/jws-app:1.0
-Tag petclinic-dev/jws-app:1.0 set to petclinic-dev/jws-app@sha256:e7d058394a1876d68f36d1851e907552738fe5033fdcdca81509abfbabac5c77.
 $ tkn p start petclinic-deploy-stage-tomcat -n petclinic-cicd                                                          
 ? Value for param `IMAGE_TAG` of type `string`? (Default is `latest`) 1.0
 Pipelinerun started: petclinic-deploy-stage-tomcat-run-fhzh5
@@ -391,6 +465,11 @@ In order to track the pipelinerun progress run:
 tkn pipelinerun logs petclinic-deploy-stage-tomcat-run-fhzh5 -f -n petclinic-cicd
 $ tkn pr logs -L -f -n petclinic-cicd   
 ----
+
+==== Optional: Trigger build from internal repo ====
+
+4. Point out internal git repo
+
 
 == Monitoring Application ==
 
@@ -408,6 +487,24 @@ Equivalent would be CloudWatch
 
 == Appendix ==
 
+=== Debugging with Tomcat ===
+
+3. Add a tomcat server
+
+NOTE: This section requires the use of the vscode extension `adashen.vscode-tomcat` and assumes you're running from within the `quay.io/mhildenb/comparison-demo-base:1.0` (dev) container
+
+* From the vscode file explorer, look for the tomcat panel and mouse over the _+_ button on the right
+
+image:../images/tomcat-add.png[]
+
+* Enter the tomcat directory when prompted: `/opt/webserver`
+
+NOTE: If the tomcat server fails to appear, you can find some <<Troubleshooting Tomcat Server, troubleshooting steps here>> as well as a way to run the demo without the extension.
+
+4. Debug .war file by right clicking on the newly added tomcat server and selecting _Debug War Package_.  You should find the war in `target` subdirectory of the workspace.  Maven will also output where it put in the .war at the end of the `install` goal.
+
+image:../images/tomcat-debug.png[]
+
 === Troubleshooting Tomcat Server ===
 
 If the tomcat extension fails to run, you can attempt the following:
@@ -422,16 +519,28 @@ Attempt to readd tomcat to /opt/webserver per the instructions above
 
 if that still doesn't work, rebuild container.
 
-If all else fails, [blue]#you can run the tomcat server locally#.  Start in the project base directory and run
+If all else fails, [blue]#you can run the tomcat server locally#.  
+
+=== Initial Binary Build ===
+
+For more information on building from a binary that is created from this, perhaps see link:https://docs.openshift.com/container-platform/3.6/dev_guide/dev_tutorials/binary_builds.html[here] and especially link:http://v1.uncontained.io/playbooks/app_dev/binary_deployment_howto.html[here]
+
+To create from a pre-compiled binary, use the following command:
 
 ----
-example/run-tomcat.sh start
+oc new-build jboss-webserver31-tomcat8-openshift:1.4 --binary=true --name=jws-app
 
-# Make sure there are no errors and wait until you see this prompt:
-**** [main] INFO  org.apache.catalina.startup.Catalina- Server startup in 13275 ms
+# setup the app first before building so that the steps of the build can be shown
+oc new-app jws-app --allow-missing-imagestream-tags=true
+oc apply -f $DEMO_HOME/kube/services/jws-app-binary.yaml
+
+# print out the route to the application
+echo "https://$(oc get route jws-app -o jsonpath='{.spec.host}')/"
+
+# Run from the root of the spring dev directory (could use --follow=true on this command if you want)
+oc start-build jws-app --from-file=target 
 ----
 
-When it starts up you should be able to expose the port as you would through the tomcat extension.  Stop the topcat server from that same command line with kbd:[ctrl + c] 
 
 === Optional: Running with SQL locally ===
 
