@@ -6,6 +6,7 @@ declare PRJ_PREFIX="petclinic"
 declare COMMAND="help"
 declare USER=""
 declare PASSWORD=""
+declare CREATE_STAGING_PIPELINE=""
 
 valid_command() {
   local fn=$1; shift
@@ -30,6 +31,10 @@ while (( "$#" )); do
     -p|--project-prefix)
       PRJ_PREFIX=$2
       shift 2
+      ;;
+    --create-staging-pipeline)
+      CREATE_STAGING_PIPELINE=$1;
+      shift 1
       ;;
     --)
       shift
@@ -89,9 +94,13 @@ command.install() {
   oc policy add-role-to-user edit system:serviceaccount:$cicd_prj:pipeline -n $stage_prj
 
   # Create staging pipeline
-  info "Creating the deploy to staging pipeline"
-  oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p PROJECT_NAME=$cicd_prj \
-    -p DEVELOPMENT_PROJECT=$dev_prj -p STAGING_PROJECT=$stage_prj | oc apply -f - -n $cicd_prj
+  if [[ -z "$CREATE_STAGING_PIPELINE" ]]; then
+    info "Creating the deploy to staging pipeline"
+    oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p PROJECT_NAME=$cicd_prj \
+      -p DEVELOPMENT_PROJECT=$dev_prj -p STAGING_PROJECT=$stage_prj | oc apply -f - -n $cicd_prj
+  else
+    info "Skipping staging pipeline creation"
+  fi
     
   # Start SQL Creation
   info "Deploying SQL Cluster"
@@ -105,24 +114,7 @@ command.install() {
   
   cat <<-EOF
 
-############################################################################
-############################################################################
-
-  CI/CD project is installed! Give it a few minutes to finish deployments and then:
-
-  1) Go to spring-petclinic Git repository in Gogs:
-     http://$GOGS_HOSTNAME/gogs/spring-petclinic.git
-  
-  2) Log into Gogs with username/password: gogs/gogs
-      
-  3) Edit a file in the repository and commit to trigger the pipeline
-
-  4) Check the pipeline run logs in Dev Console or Tekton CLI:
-     
-    \$ tkn pipeline logs petclinic-deploy-dev -f -n $cicd_prj
-
-############################################################################
-############################################################################
+Staging Project is Created
 EOF
 }
 
