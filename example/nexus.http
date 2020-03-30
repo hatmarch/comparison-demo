@@ -1,0 +1,27 @@
+# Information on the NEXUS REST API: https://help.sonatype.com/repomanager3/rest-and-integration-api/script-api
+# Assumes that you have first oc port-forward svc/nexus 8081:8081 -n <target_project> before running any of these
+
+POST http://localhost:8081/service/rest/v1/script/ http/1.1 
+content-type: Application/JSON
+Authorization: Basic admin:admin123
+
+{
+  "name": "maven-public",
+  "type": "groovy",
+  "content": "repository.createMavenGroup('maven-public', 'redhat-ea,spring-io'.split(',').toList())"
+}
+
+POST http://localhost:8081/service/rest/v1/script/maven-public/run http/1.1
+Authorization: Basic admin:admin123
+content-type: Application/JSON
+
+{
+
+}
+
+DELETE http://localhost:8081/service/rest/v1/script/maven-public
+Authorization: Basic admin:admin123
+
+# List scripts
+GET http://localhost:8081/service/rest/v1/script
+Authorization: Basic admin:admin123
