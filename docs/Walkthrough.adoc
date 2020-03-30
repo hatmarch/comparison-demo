@@ -404,9 +404,23 @@ image:../images/petclinic-add-owner.png[]
 
 6. Tour the cicd project that we created
 
-* Sonarqube
+* Sonarqube: show the results of analysis by navigating to the endpoint
+
+----
+echo "https://$(oc get route sonarqube -o jsonpath='{.spec.host}' -n petclinic-cicd)/"
+----
+
 * Internal Git Repo
+
+----
+echo "http://$(oc get route gogs -o jsonpath='{.spec.host}' -n petclinic-cicd)/"
+----
+
 * Nexus Repository
+
+----
+echo "http://$(oc get route nexus -o jsonpath='{.spec.host}' -n petclinic-cicd)/"
+----
 
 NOTE: [blue]#Build will take about 10 minutes to complete# This is a good time to discuss that OpenShift can also integrate with Jenkins Pipeline and pass to Tyrell
 
