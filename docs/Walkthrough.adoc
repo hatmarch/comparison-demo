@@ -110,7 +110,7 @@ Show the different aspects of the code pipeline
 
 in vscode, use kbd:[cmd + p] to quickly open buildspec.yaml
 
-image:../images.aws-buildspec.png[]
+image:../images/aws-buildspec.png[]
 
 2. Pipeline Unit Test
 
@@ -160,41 +160,60 @@ image:../images/aws-pipeline-reject.png[]
 
 == OpenShift: Development Environment Creation ==
 
+=== Prerequisite: Introduction to Operators ===
 
+1. Talk about the Operator market place and what it means for developers in terms of self service
 
-=== OpenShift ===
+** Service Mesh Operator
+** Crunchy DB
 
-1. Create a new project
+2. Install (or Describe) the Pipelines Operator
+
+image:../images/operator-pipelines.png[]
+
+3. Install (or Describe) the MySQL Operator as per link:../README.adoc[README]
+
+** Describe how this is an adapted Helm Chart
+
+=== Initial Developer Build (with S2I) ===
+
+[ALERT]
+==== 
+Switch to comparison demo vscode window
+====
+
+1. Create a new project.  [blue]#Describe that this is something like creating a new environment in elastic beanstalk or just in general.#
 
 ----
 oc new-project petclinic-dev
 ----
 
-2. Show the creation of a new MySQL cluster using the cluster YAML
+2. Show the creation of a new MySQL cluster using the cluster YAML by first demonstrating that the operator is available
 
-[NOTE]
-====
-There may be the ability to install this operator from the catalog, if so, show this and wait until the operator indicates that it's installed to the repo before going further.  Otherwise it need to be installed from a helm chart.  If with operator, check with the following command and make sure you get the Succeeded PHASE of the mysql-olm-operator.
+image:../images/operator-installed.png[]
 
-[blue]#This might be a good time to talk about operators in general#
+Once the operator has been copied to our project, we are free to create the resources (CRD) that will create our cluster.  
 
-----
- oc get csv -n petclinic-dev -w
-NAME                                   DISPLAY                        VERSION   REPLACES                              PHASE
-mysql-olm-operator.v0.0.1              MySQL Operator                 0.0.1                                           Succeeded
-----
+** Hit kbd:[cmd+p] to quickly open `mysql-cluster-instance.yaml` and describe that this is all that is necessary to setup a database cluster on the kubernetes instance
 
-====
+image:../images/mysql-cluster-instance.png[]
 
-Once the operator has been copied to our project, we are free to create the resources (CRD) that will create our cluster
+Possibly also show the cluster creation script before issuing.  Then issue the command:
 
 ----
 $DEMO_HOME/scripts/create-sql-cluster.sh 
 ----
 
-[red]#FIXME: If the CSV for the MySQL operator can be fixed up, it will be easier to show the custom resources in the UI#
+Next, quickly show how the results of the command have caused creation in the UI:
+
+image:../images/operator-sql-creation.png[]
 
 _While waiting for the creation of the MySQL cluster, move on to the build_
+
+[ALERT]
+==== 
+Switch to spring-petclinic vscode window
+====
 
 3. Create from template 
 
@@ -300,11 +319,35 @@ WARNING: This section assumes that the petclinic-cicd project has been created. 
 
 4. Point out internal git repo
 
-    * 
-
 ==== Trigger build from external repo ====
 
-5. Perhaps demonstrate triggering from github
+1. Get the URL of the trigger event
+
+----
+oc get route 
+----
+
+1. Open the settings page of the github repo link:https://github.com/hatmarch/spring-framework-petclinic/settings/hooks/192601155[here]
+
+Update the webhook with the URL from above and activate it
+
+image:../images/pipeline-github-webhook.png[]
+
+[ALERT]
+====
+Switch to spring-petclinic-vscode window
+====
+
+2. Make a change to the welcome.jsp
+
+----
+    <h3> Hello from OpenShift Pipelines </h3>
+----
+
+3. [red]#Make sure the OpenShift Developer View of the Pipeline can be seen
+
+image:../images/developer-pipeline-run.png[]
+
 
 ==== Trigger deployment from code pipeline? ====
 
@@ -315,6 +358,23 @@ tkn p start petclinic-deploy-stage-tomcat -n petclinic-cicd
 ? Value for param `IMAGE_TAG` of type `string`? (Default is `latest`) latest
 Pipelinerun started: petclinic-deploy-stage-tomcat-run-fhzh5
 ----
+
+Notice that this build will fail.  We need to create a staging environment first.  Show from the Dev Perspective that the staging environment is an empty shell
+
+7. Run the following command to finish building 
+
+----
+$DEMO_HOME/scripts/create-staging-full.sh install -p petclinic
+----
+
+Now this time attempt to trigger the pipeline from the UI.  Switch to the `petclinic-cicd` environment.  Select _Pipelines_ from the left panel then right click on ... and select start.  Indicate that the latest build is desired.
+
+image:../images/pipelines-deploy-to-staging-ui.png[]
+
+8. When the build completes, move to the petclinic-staging project and click the badge to open the staging website
+
+image:../images/openshift-staging-badge.png[]
+
 
 ==== Rollback with pipelines ====
 
@@ -332,41 +392,19 @@ tkn pipelinerun logs petclinic-deploy-stage-tomcat-run-fhzh5 -f -n petclinic-cic
 $ tkn pr logs -L -f -n petclinic-cicd   
 ----
 
-== Production Environments ==
-
-Show how we create additional environments and update pipeline to be able to deploy into these
-
-=== AWS ===
- Show creation of staging and production environment in EB
-
-=== OpenShift ===
-
-Show creation of staging and production projects in OS
-
-Deploy the latest
-
-Deploy a rollback
-
-[NOTE]
-====
-But first need to make sure image stream is tagged appropriately in the CICD project where is the sha for an image in the local test-petclinic4 image registry for app jws-app
-
-----
-oc tag test-petclinic4/jws-app@sha256:3330273342340f89508bdd3ad0fb6ffcfef74dc8991921f9246402809e48a499 test-petclinic4/jws-app:1.0
-----
-====
-
 == Monitoring Application ==
-
-=== AWS ===
-
-CloudWatch
 
 === OpenShift ===
 
 See link:https://medium.com/logistimo-engineering-blog/tomcat-jvm-metrics-monitoring-using-prometheus-in-kubernetes-c313075af727[here] for getting information into Prometheus 
 
-== Debugging Application ==
+Quick Nod: Show how this is possible from the Developer Perspective.  Select _Advanced > Metrics_ and then click the button to create an example query.  You should be able to see CPU footprint of the different parts of the Tekton pipeline.
+
+image:../images/metrics-general.png[]
+
+=== AWS ===
+
+Equivalent would be CloudWatch
 
 == Appendix ==
 
