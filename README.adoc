@@ -142,20 +142,9 @@ Pipeline setup is inspired by this post link:https://developers.redhat.com/blog/
 .TODO
 ****
 
-1. Support a separate CI/CD environment
-1. Instead of image trigger in Dev, do an actual deployment (using oc command tasks)
 4. Integrate with Jenkins instead
 5. Show integration with external (maybe code deploy?)
 6. Any Other aspects of pipeline to match code deploy?
-2. Attempt to use a workspace (for example see link:https://github.com/siamaksade/tekton-cd-demo/blob/master/pipelines/pipeline-pvc.yaml[here]) to further speed up the build (doesn't appear to have made a significant difference to build times in the way that it's currently used in the tutorial)
-
-----
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 01:58 min
-[INFO] Finished at: 2020-03-18T02:04:03Z
-[INFO] Final Memory: 75M/226M
-----
 
 ****
 
@@ -187,7 +176,7 @@ NOTE: See also tips and tricks from the link:https://github.com/openshift/pipeli
 
 === CI/CD Project Install ===
 
-A good example on how to get this running with SpringBoot is link:https://github.com/siamaksade/tekton-cd-demo[here].  This demo is heavily based on it.
+A good example on how to get this running with SpringBoot is link:https://github.com/siamaksade/tekton-cd-demo[here].  This demo is heavily based on it.  link:https://developer.ibm.com/blogs/create-a-serverless-pipeline-using-newly-enhanced-tekton-features/[this] is also a good article about a number of Tekton features used in this demo (such as workspaces) including some others that aren't yet being used (e.g. conditions)
 
 4. Run the following script to setup the entire cicd project (it will create a project called `<PROJECT_PREFIX>-cicd` (where `<PROJECT_PREFIX>` is the value passed to --project-prefix in the command below) if it doesn't exist already to install all the artifacts into.
 
