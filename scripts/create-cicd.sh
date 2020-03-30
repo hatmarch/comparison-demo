@@ -117,7 +117,7 @@ command.install() {
   oc apply -f $DEMO_HOME/kube/tekton/pipelines/pipeline-pvc.yaml -n $cicd_prj
 
   info "Deploying dev and staging pipelines"
-  if [[ ! -z "$SKIP_STAGING_PIPELINES" ]]; then
+  if [[ ! -z "$SKIP_STAGING_PIPELINE" ]]; then
     oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p PROJECT_NAME=$cicd_prj \
       -p DEVELOPMENT_PROJECT=$dev_prj -p STAGING_PROJECT=$stage_prj | oc apply -f - -n $cicd_prj
   else
