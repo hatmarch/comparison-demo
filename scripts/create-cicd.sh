@@ -4,7 +4,7 @@ set -e -u -o pipefail
 declare -r SCRIPT_DIR=$(cd -P $(dirname $0) && pwd)
 declare PRJ_PREFIX="petclinic"
 declare COMMAND="help"
-declare CREATE_DEV=false
+declare SKIP_STAGING_PIPELINE=""
 declare USER=""
 declare PASSWORD=""
 
@@ -40,9 +40,9 @@ while (( "$#" )); do
       PASSWORD=$2
       shift 2
       ;;
-    --dev)
-      CREATE_DEV=$2
-      shift 2
+    --skip-staging-pipeline)
+      SKIP_STAGING_PIPELINE=$1;
+      shift 1
       ;;
     --)
       shift
@@ -117,8 +117,13 @@ command.install() {
   oc apply -f $DEMO_HOME/kube/tekton/pipelines/pipeline-pvc.yaml -n $cicd_prj
 
   info "Deploying dev and staging pipelines"
+  if [[ ! -z "$SKIP_STAGING_PIPELINES" ]]; then
+    oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p PROJECT_NAME=$cicd_prj \
+      -p DEVELOPMENT_PROJECT=$dev_prj -p STAGING_PROJECT=$stage_prj | oc apply -f - -n $cicd_prj
+  else
+    info "Skipping deploy to staging pipeline at user's request"
+  fi
   sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/pipelines/petclinic-dev-pipeline-tomcat.yaml | oc apply -f - -n $cicd_prj
-  oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p PROJECT_NAME=$cicd_prj -p DEVELOPMENT_PROJECT=$dev_prj | oc apply -f - -n $cicd_prj
   
   # Install pipeline resources
   sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/resources/app-image.yaml | oc apply -f - -n $cicd_prj
@@ -130,20 +135,13 @@ command.install() {
   # Install pipeline triggers
   oc apply -f $DEMO_HOME/kube/tekton/triggers -n $cicd_prj
 
-  # info "Deploying app to $dev_prj namespace"
-  # oc import-image quay.io/siamaksade/spring-petclinic --confirm -n $dev_prj
-  # oc apply -f app -n $dev_prj
-  # oc set image deployment/spring-petclinic spring-petclinic=image-registry.openshift-image-registry.svc:5000/$dev_prj/spring-petclinic -n $dev_prj
-
-  info "Deploying app to $stage_prj namespace"
-  oc tag $dev_prj/jws-app:latest $stage_prj/jws-app:latest
-  oc apply -f $DEMO_HOME/kube/app -n $stage_prj
-  oc set image deployment/jws-app spring-petclinic=image-registry.openshift-image-registry.svc:5000/$stage_prj/jws-app -n $stage_prj
-
   info "Initiatlizing git repository in Gogs and configuring webhooks"
   sed "s/@HOSTNAME/$GOGS_HOSTNAME/g" $DEMO_HOME/kube/config/gogs-configmap.yaml | oc create -f - -n $cicd_prj
   oc rollout status deployment/gogs -n $cicd_prj
   oc create -f $DEMO_HOME/kube/config/gogs-init-taskrun.yaml -n $cicd_prj
+
+  info "Configure nexus repo"
+  $SCRIPT_DIR/util-config-nexus.sh -n $cicd_prj -u admin -p admin123
 
   cat <<-EOF
 
