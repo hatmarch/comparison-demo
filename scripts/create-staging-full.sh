@@ -108,9 +108,9 @@ command.install() {
   $DEMO_HOME/scripts/create-sql-cluster.sh
 
   info "Deploying app to $stage_prj namespace"
-  oc tag $dev_prj/jws-app:latest $stage_prj/jws-app:latest
+  oc tag $dev_prj/petclinic:latest $stage_prj/petclinic:latest
   oc process -f $DEMO_HOME/kube/staging/staging-project-template.yaml -p STAGING_PROJECT=$stage_prj \
-    -p APP_NAME=jws-app | oc apply -f - -n $stage_prj
+    -p APP_NAME=petclinic | oc apply -f - -n $stage_prj
   
   cat <<-EOF
 

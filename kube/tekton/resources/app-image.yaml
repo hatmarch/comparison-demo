@@ -6,5 +6,5 @@ spec:
   params:
   - name: url
 # FIXME: this name is not very descriptive, but it's the name of the app that comes out of the demo
-    value: image-registry.openshift-image-registry.svc:5000/demo-dev/jws-app
+    value: image-registry.openshift-image-registry.svc:5000/demo-dev/petclinic
   type: image

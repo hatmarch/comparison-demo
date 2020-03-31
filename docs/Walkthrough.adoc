@@ -253,7 +253,8 @@ WARNING: Be sure to select the *Tomcat 8* template.  Tomcat 7 will definitely no
 To create from a S2I template, use the following command (or mine this information to fill in the corresponding information on the template).  [blue]#NOTE that this is coming from the github repo, _not_ codecommit#
 
 ----
-oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='https://github.com/hatmarch/spring-framework-petclinic.git' --param=SOURCE_REPOSITORY_REF='trigger-test' --param=CONTEXT_DIR='' 
+oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='https://github.com/hatmarch/spring-framework-petclinic.git' --param=SOURCE_REPOSITORY_REF='trigger-test' --param=CONTEXT_DIR='' \
+    --param=APPLICATION_NAME=petclinic
 ----
 
 NOTE: If you want to install based entirely on a binary build and skip the UI template part, see <<Initial Binary Build,instructions in Appendix>>
@@ -261,7 +262,7 @@ NOTE: If you want to install based entirely on a binary build and skip the UI te
 4. Then can show the logs of the S2I running using this command (or finding from the UI)
 
 ----
-oc logs -f bc/jws-app
+oc logs -f bc/petclinic
 ----
 
 Point out how (*S2I builds only*)
@@ -305,7 +306,7 @@ Once the build is cancelled, you can start a binary build [blue]#from the Spring
 ./mvnw package -Popenshift -DskipTests
 
 # NOTE append --follow=true on this command if you want to follow logs in window
-oc start-build jws-app --from-file=target -n petclinic-dev
+oc start-build petclinic --from-file=target -n petclinic-dev
 ----
 
 _[blue]#build should take about 2.5 minutes#_
@@ -321,7 +322,7 @@ And see how those additional pods are referenced from the `service`
 Finally, for the sake of rollback later on, we're going to tag the current build *BEFORE* we start our pipeline.
 
 ----
-oc tag jws-app:latest jws-app:1.0 -n petclinic-dev
+oc tag petclinic:latest petclinic:1.0 -n petclinic-dev
 ----
 
 == Continuous Integration ==
@@ -549,17 +550,17 @@ For more information on building from a binary that is created from this, perhap
 To create from a pre-compiled binary, use the following command:
 
 ----
-oc new-build jboss-webserver31-tomcat8-openshift:1.4 --binary=true --name=jws-app
+oc new-build jboss-webserver31-tomcat8-openshift:1.4 --binary=true --name=petclinic
 
 # setup the app first before building so that the steps of the build can be shown
-oc new-app jws-app --allow-missing-imagestream-tags=true
-oc apply -f $DEMO_HOME/kube/services/jws-app-binary.yaml
+oc new-app petclinic --allow-missing-imagestream-tags=true
+oc apply -f $DEMO_HOME/kube/services/petclinic-binary.yaml
 
 # print out the route to the application
-echo "https://$(oc get route jws-app -o jsonpath='{.spec.host}')/"
+echo "https://$(oc get route petclinic -o jsonpath='{.spec.host}')/"
 
 # Run from the root of the spring dev directory (could use --follow=true on this command if you want)
-oc start-build jws-app --from-file=target 
+oc start-build petclinic --from-file=target 
 ----
 
 
@@ -584,5 +585,5 @@ docker run --name mysql-petclinic -e MYSQL_ROOT_PASSWORD=petclinic -e MYSQL_DATA
 ** Run connected to the sqlserver in the dev directory
 
 ----
-oc port-forward -n petclinic-dev svc/jws-app-sql 3306:3306
+oc port-forward -n petclinic-dev svc/petclinic-sql 3306:3306
 ----

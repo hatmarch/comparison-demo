@@ -72,10 +72,10 @@ oc create secret generic mysql-root-password --from-literal=password="petclinic"
 
 [NOTE]
 ====
-You can let the operator create the password for you.  If you follow this route, you'll need to fish out the password yourself.  Assuming the cluster is named `jws-app-mysql` (running this command in the project in which it is installed):
+You can let the operator create the password for you.  If you follow this route, you'll need to fish out the password yourself.  Assuming the cluster is named `petclinic-mysql` (running this command in the project in which it is installed):
 
 ----
-oc get secret jws-app-mysql-root-password -o jsonpath="{.data.password}" | base64 --decode
+oc get secret petclinic-mysql-root-password -o jsonpath="{.data.password}" | base64 --decode
 ----
 ====
 
@@ -94,7 +94,7 @@ oc apply -f $DEMO_HOME/kube/operators/mysql/mysql-primary-service.yaml
 Test access to the database using Adminer
 
 ----
-oc port-forward svc/jws-app-mysql 3306:3306
+oc port-forward svc/petclinic-mysql 3306:3306
 docker run -p 8080:8080 -e ADMINER_DEFAULT_SERVER=docker.for.mac.localhost adminer:latest
 ----
 
@@ -109,7 +109,7 @@ GRANT ALL PRIVILEGES ON petclinic.* TO 'pc'@'%';
 Or run these on a local command line
 ----
 oc run mysql-client --image=mysql:5.7 --restart=Never --rm=true --attach=true --wait=true \
-    -- mysql -h jws-app-mysql -uroot -ppetclinic -e "CREATE USER 'pc'@'%' IDENTIFIED BY 'petclinic'; \
+    -- mysql -h petclinic-mysql -uroot -ppetclinic -e "CREATE USER 'pc'@'%' IDENTIFIED BY 'petclinic'; \
       CREATE DATABASE petclinic; \
       GRANT ALL PRIVILEGES ON petclinic.* TO 'pc'@'%';"
 ----
