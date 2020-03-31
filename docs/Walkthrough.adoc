@@ -220,6 +220,8 @@ image:../images/mysql-cluster-instance.png[]
 Possibly also show the cluster creation script before issuing.  Then issue the command:
 
 ----
+# create the project if you haven't already, otherwise use oc project petclinic-dev
+oc new-project petclinic-dev
 $DEMO_HOME/scripts/create-sql-cluster.sh 
 ----
 
@@ -243,6 +245,8 @@ Open the _Developer Perspective_ in the _petclinic-dev_ project and click the _+
 image:../images/dev-from-catalog.png[]
 
 image:../images/dev-tomcat-template.png[]
+
+WARNING: Be sure to select the *Tomcat 8* template.  Tomcat 7 will definitely not work properly.
 
 ==== Install based on S2I ====
 
@@ -297,11 +301,14 @@ oc cancel-build $(oc get build -o custom-columns=NAME:.metadata.name --no-header
 Once the build is cancelled, you can start a binary build [blue]#from the Spring-Petclinic vscode instance# with this command (from the root of the spring dev directory):
 
 ----
+# Make sure to build something appropriate for OpenShift before pushing out
+./mvnw package -Popenshift -DskipTests
+
 # NOTE append --follow=true on this command if you want to follow logs in window
 oc start-build jws-app --from-file=target -n petclinic-dev
 ----
 
-[blue]#_build should take about 2.5 minutes_ #
+_[blue]#build should take about 2.5 minutes#_
 
 Show how more pods can be created, for example
 
