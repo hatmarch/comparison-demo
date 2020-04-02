@@ -1,0 +1,195 @@
+{
+    "pipeline": {
+        "name": "petclinic-pipeline",
+        "roleArn": "arn:aws:iam::182449301782:role/service-role/AWSCodePipelineServiceRole-ap-southeast-2-petclinic-pipeline",
+        "artifactStore": {
+            "type": "S3",
+            "location": "codepipeline-ap-southeast-2-920721616463"
+        },
+        "stages": [
+            {
+                "name": "Source",
+                "actions": [
+                    {
+                        "name": "Source",
+                        "actionTypeId": {
+                            "category": "Source",
+                            "owner": "AWS",
+                            "provider": "CodeCommit",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "BranchName": "trigger-test",
+                            "PollForSourceChanges": "true",
+                            "RepositoryName": "PetclinicDemo"
+                        },
+                        "outputArtifacts": [
+                            {
+                                "name": "SourceArtifact"
+                            }
+                        ],
+                        "inputArtifacts": [],
+                        "region": "ap-southeast-2",
+                        "namespace": "SourceVariables"
+                    }
+                ]
+            },
+            {
+                "name": "TestAndAnalyze",
+                "actions": [
+                    {
+                        "name": "UnitTest",
+                        "actionTypeId": {
+                            "category": "Build",
+                            "owner": "AWS",
+                            "provider": "CodeBuild",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ProjectName": "petclinic-unittest"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [
+                            {
+                                "name": "SourceArtifact"
+                            }
+                        ],
+                        "region": "ap-southeast-2"
+                    },
+                    {
+                        "name": "StaticAnalysis",
+                        "actionTypeId": {
+                            "category": "Build",
+                            "owner": "AWS",
+                            "provider": "CodeBuild",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ProjectName": "petclinic-analysis"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [
+                            {
+                                "name": "SourceArtifact"
+                            }
+                        ],
+                        "region": "ap-southeast-2"
+                    }
+                ]
+            },
+            {
+                "name": "Build",
+                "actions": [
+                    {
+                        "name": "Build",
+                        "actionTypeId": {
+                            "category": "Build",
+                            "owner": "AWS",
+                            "provider": "CodeBuild",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ProjectName": "petclinic"
+                        },
+                        "outputArtifacts": [
+                            {
+                                "name": "BuildArtifact"
+                            }
+                        ],
+                        "inputArtifacts": [
+                            {
+                                "name": "SourceArtifact"
+                            }
+                        ],
+                        "region": "ap-southeast-2",
+                        "namespace": "BuildVariables"
+                    }
+                ]
+            },
+            {
+                "name": "Deploy",
+                "actions": [
+                    {
+                        "name": "Deploy",
+                        "actionTypeId": {
+                            "category": "Deploy",
+                            "owner": "AWS",
+                            "provider": "ElasticBeanstalk",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ApplicationName": "PetClinic",
+                            "EnvironmentName": "PetClinic-dev"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [
+                            {
+                                "name": "BuildArtifact"
+                            }
+                        ],
+                        "region": "ap-southeast-2",
+                        "namespace": "DeployVariables"
+                    }
+                ]
+            },
+            {
+                "name": "Promote",
+                "actions": [
+                    {
+                        "name": "PushToStaging",
+                        "actionTypeId": {
+                            "category": "Approval",
+                            "owner": "AWS",
+                            "provider": "Manual",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ExternalEntityLink": "http://petclinic-dev.ap-southeast-2.elasticbeanstalk.com/"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [],
+                        "region": "ap-southeast-2"
+                    }
+                ]
+            },
+            {
+                "name": "Staging",
+                "actions": [
+                    {
+                        "name": "DeployToStaging",
+                        "actionTypeId": {
+                            "category": "Deploy",
+                            "owner": "AWS",
+                            "provider": "ElasticBeanstalk",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ApplicationName": "PetClinic",
+                            "EnvironmentName": "PetClinic-Stage"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [
+                            {
+                                "name": "BuildArtifact"
+                            }
+                        ],
+                        "region": "ap-southeast-2"
+                    }
+                ]
+            }
+        ],
+        "version": 6
+    },
+    "metadata": {
+        "pipelineArn": "arn:aws:codepipeline:ap-southeast-2:182449301782:petclinic-pipeline",
+        "created": "2020-03-23T07:38:52.684000+00:00",
+        "updated": "2020-03-28T02:29:15.695000+00:00"
+    }
+}

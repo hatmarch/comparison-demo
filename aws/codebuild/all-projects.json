@@ -1,0 +1,168 @@
+{
+    "projects": [
+        {
+            "name": "petclinic-analysis",
+            "arn": "arn:aws:codebuild:ap-southeast-2:182449301782:project/petclinic-analysis",
+            "description": "Run sonarqube",
+            "source": {
+                "type": "CODECOMMIT",
+                "location": "https://git-codecommit.ap-southeast-2.amazonaws.com/v1/repos/PetclinicDemo",
+                "gitCloneDepth": 1,
+                "gitSubmodulesConfig": {
+                    "fetchSubmodules": false
+                },
+                "buildspec": "buildspec-sonarqube.yml",
+                "insecureSsl": false
+            },
+            "secondarySources": [],
+            "sourceVersion": "refs/heads/spring-5.2.0",
+            "secondarySourceVersions": [],
+            "artifacts": {
+                "type": "NO_ARTIFACTS"
+            },
+            "secondaryArtifacts": [],
+            "cache": {
+                "type": "NO_CACHE"
+            },
+            "environment": {
+                "type": "LINUX_CONTAINER",
+                "image": "aws/codebuild/standard:4.0",
+                "computeType": "BUILD_GENERAL1_SMALL",
+                "environmentVariables": [],
+                "privilegedMode": false,
+                "imagePullCredentialsType": "CODEBUILD"
+            },
+            "serviceRole": "arn:aws:iam::182449301782:role/service-role/codebuild-petclinic-analysis-service-role",
+            "timeoutInMinutes": 60,
+            "queuedTimeoutInMinutes": 480,
+            "encryptionKey": "arn:aws:kms:ap-southeast-2:182449301782:alias/aws/s3",
+            "tags": [],
+            "created": "2020-03-24T07:33:43.150000+00:00",
+            "lastModified": "2020-03-24T07:33:43.150000+00:00",
+            "badge": {
+                "badgeEnabled": false
+            },
+            "logsConfig": {
+                "cloudWatchLogs": {
+                    "status": "ENABLED"
+                },
+                "s3Logs": {
+                    "status": "DISABLED",
+                    "encryptionDisabled": false
+                }
+            }
+        },
+        {
+            "name": "petclinic-unittest",
+            "arn": "arn:aws:codebuild:ap-southeast-2:182449301782:project/petclinic-unittest",
+            "description": "Unit test phase for petclinic",
+            "source": {
+                "type": "CODECOMMIT",
+                "location": "https://git-codecommit.ap-southeast-2.amazonaws.com/v1/repos/PetclinicDemo",
+                "gitCloneDepth": 1,
+                "gitSubmodulesConfig": {
+                    "fetchSubmodules": false
+                },
+                "buildspec": "buildspec-unittest.yml",
+                "insecureSsl": false
+            },
+            "secondarySources": [],
+            "sourceVersion": "refs/heads/spring-5.2.0",
+            "secondarySourceVersions": [],
+            "artifacts": {
+                "type": "NO_ARTIFACTS"
+            },
+            "secondaryArtifacts": [],
+            "cache": {
+                "type": "NO_CACHE"
+            },
+            "environment": {
+                "type": "LINUX_CONTAINER",
+                "image": "aws/codebuild/standard:4.0",
+                "computeType": "BUILD_GENERAL1_SMALL",
+                "environmentVariables": [],
+                "privilegedMode": false,
+                "imagePullCredentialsType": "CODEBUILD"
+            },
+            "serviceRole": "arn:aws:iam::182449301782:role/service-role/codebuild-helloworld-build-service-role",
+            "timeoutInMinutes": 60,
+            "queuedTimeoutInMinutes": 480,
+            "encryptionKey": "arn:aws:kms:ap-southeast-2:182449301782:alias/aws/s3",
+            "tags": [],
+            "created": "2020-03-23T07:51:00.182000+00:00",
+            "lastModified": "2020-03-24T07:31:29.560000+00:00",
+            "badge": {
+                "badgeEnabled": false
+            },
+            "logsConfig": {
+                "cloudWatchLogs": {
+                    "status": "ENABLED"
+                },
+                "s3Logs": {
+                    "status": "DISABLED",
+                    "encryptionDisabled": false
+                }
+            }
+        },
+        {
+            "name": "petclinic",
+            "arn": "arn:aws:codebuild:ap-southeast-2:182449301782:project/petclinic",
+            "description": "Petclinic Demo Project",
+            "source": {
+                "type": "CODECOMMIT",
+                "location": "https://git-codecommit.ap-southeast-2.amazonaws.com/v1/repos/PetclinicDemo",
+                "gitCloneDepth": 1,
+                "gitSubmodulesConfig": {
+                    "fetchSubmodules": false
+                },
+                "insecureSsl": false
+            },
+            "secondarySources": [],
+            "sourceVersion": "refs/heads/trigger-test",
+            "secondarySourceVersions": [],
+            "artifacts": {
+                "type": "S3",
+                "location": "mwh-codebuild-artefacts",
+                "path": "",
+                "namespaceType": "NONE",
+                "name": "petclinic-artefacts.zip",
+                "packaging": "ZIP",
+                "overrideArtifactName": false,
+                "encryptionDisabled": false
+            },
+            "secondaryArtifacts": [],
+            "cache": {
+                "type": "NO_CACHE"
+            },
+            "environment": {
+                "type": "LINUX_CONTAINER",
+                "image": "aws/codebuild/standard:4.0",
+                "computeType": "BUILD_GENERAL1_SMALL",
+                "environmentVariables": [],
+                "privilegedMode": false,
+                "imagePullCredentialsType": "CODEBUILD"
+            },
+            "serviceRole": "arn:aws:iam::182449301782:role/service-role/codebuild-petclinic-service-role",
+            "timeoutInMinutes": 60,
+            "queuedTimeoutInMinutes": 480,
+            "encryptionKey": "arn:aws:kms:ap-southeast-2:182449301782:alias/aws/s3",
+            "tags": [],
+            "created": "2020-03-23T07:31:39.750000+00:00",
+            "lastModified": "2020-03-24T06:54:06.505000+00:00",
+            "badge": {
+                "badgeEnabled": true,
+                "badgeRequestUrl": "https://codebuild.ap-southeast-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiWWdnOFdvUitzNSs0dmU5aHdJV1c5d3NoSzBvaTErNWxwOU9IdGhyTHhpd2dGQ1ZZaFhxN3IraHZnYkdwTGJxVEZlVFhrNzkwc2VIdjlnVlNreklYcHpRPSIsIml2UGFyYW1ldGVyU3BlYyI6IjR2VVhveXVManhtL2d4U2YiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master"
+            },
+            "logsConfig": {
+                "cloudWatchLogs": {
+                    "status": "ENABLED"
+                },
+                "s3Logs": {
+                    "status": "DISABLED",
+                    "encryptionDisabled": false
+                }
+            }
+        }
+    ],
+    "projectsNotFound": []
+}

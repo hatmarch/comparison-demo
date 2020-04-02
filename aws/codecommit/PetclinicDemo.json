@@ -1,0 +1,14 @@
+{
+    "repositoryMetadata": {
+        "accountId": "182449301782",
+        "repositoryId": "b332d505-e149-4a72-b1b5-3ab6f87bd9bc",
+        "repositoryName": "PetclinicDemo",
+        "repositoryDescription": "For petclinic demo",
+        "defaultBranch": "spring-5.2.0",
+        "lastModifiedDate": "2020-03-31T00:49:47.192000+00:00",
+        "creationDate": "2020-03-12T23:01:45.808000+00:00",
+        "cloneUrlHttp": "https://git-codecommit.ap-southeast-2.amazonaws.com/v1/repos/PetclinicDemo",
+        "cloneUrlSsh": "ssh://git-codecommit.ap-southeast-2.amazonaws.com/v1/repos/PetclinicDemo",
+        "Arn": "arn:aws:codecommit:ap-southeast-2:182449301782:PetclinicDemo"
+    }
+}
