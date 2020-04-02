@@ -36,7 +36,7 @@ spec:
             value: $(params.gitrevision)
       - name: app-image
         resourceRef:
-          name: app-image
+          name: petclinic-image
       workspaces:
       - name: local-maven-repo
         persistentVolumeClaim:

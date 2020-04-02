@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
-  generateName: petclinic-dev-pipeline-tomcat-run-
+  name: petclinic-dev-pipeline-tomcat-run-manual
 spec:
   pipelineRef:
     name: petclinic-dev-pipeline-tomcat
@@ -15,4 +15,4 @@ spec:
   workspaces:
   - name: local-maven-repo
     persistentVolumeClaim:
-      claimName: maven-repo-pvc1
+      claimName: maven-repo-pvc

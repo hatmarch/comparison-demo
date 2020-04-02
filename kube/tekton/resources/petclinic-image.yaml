@@ -1,10 +1,11 @@
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: app-image
+  name: petclinic-image
 spec:
   params:
   - name: url
-# FIXME: this name is not very descriptive, but it's the name of the app that comes out of the demo
+# NOTE: This file is pre-processed by the cicd installation script and replaces "demo-dev" with the proper
+# Demo Dev project name
     value: image-registry.openshift-image-registry.svc:5000/demo-dev/petclinic
   type: image

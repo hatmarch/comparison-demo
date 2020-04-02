@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: app-git
+  name: petclinic-git
 spec:
   params:
   - name: url
