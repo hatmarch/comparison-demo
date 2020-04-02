@@ -9,32 +9,32 @@ Show our demo running locally
 
 WARNING: First make sure your trigger-test branch is ready to go by running `$DEMO_HOME\spring-framework-petclinic\example\restore-demo.sh`.  This will put the right image in place and reset the contents of the welcome.jsp
 
-In a local shell, go to the springboot directory and run the following commands
-
+. In a local shell, go to the springboot directory and run the following commands
++
 ----
 source scripts/shell-setup.sh
 cd $DEMO_HOME/spring-framework-petclinic
 code . 
 ----
-
-VSCode will open.  Indicate that you want to run in a container.
-
++
+. VSCode will open.  Indicate that you want to run in a container.
++
 Then you want to make sure you are in the `trigger-test` branch
-
++
 WARNING: Once the terminal is up, make sure to copy the api login string from the appropriate cluster into your console
-
++
 ----
 git checkout trigger-test
 ----
++
+. Make a change to the welcome.jsp file, mostly to give an excuse to checkin.  You can use kbd:[Cmd+ p] to quickly open it in vscode.
 
-Make a change to the welcome.jsp file, mostly to give an excuse to checkin.  You can use kbd:[Cmd+ p] to quickly open it in vscode.
-
-Add the following after the `<h2>` tags:
-
+. Add the following after the `<h2>` tags:
++
 ----
 <h3> Hello from vscode </h3>
 ----
-
++
 [NOTE]
 .If showing AWS compilation next
 ====
@@ -53,40 +53,40 @@ where `git-codecommit.ap-southeast-2.amazonaws.com` is the name of the remote th
 AWS Pipeline can be found link:https://ap-southeast-2.console.aws.amazon.com/codesuite/codepipeline/pipelines/petclinic-pipeline/view?region=ap-southeast-2[here] ([red]#need to manually adjust this link#)
 
 ====
-
-Next compile the application locally (NOTE: The HSQLDB will use local in memory database)
-
++
+. Next compile the application locally (NOTE: The HSQLDB will use local in memory database)
++
 ----
 ./mvnw package -PHSQLDB -DskipTests
 ----
-
-If you want to show debugging and the tomcat extension, follow the instructions <<Debugging with Tomcat,here>>.  Otherwise run the following from the project base directory:
-
++
+. If you want to show debugging and the tomcat extension, follow the instructions <<Debugging with Tomcat,here>>.  Otherwise run the following from the project base directory:
++
 ----
 example/run-tomcat.sh start
 
 # Make sure there are no errors and wait until you see this prompt:
 **** [main] INFO  org.apache.catalina.startup.Catalina- Server startup in 13275 ms
 ----
++
+. When it starts up you should be able to expose the port as you would through the tomcat extension.  _NOTE: You can stop the topcat server from that same command line with kbd:[ctrl + c]_
 
-When it starts up you should be able to expose the port as you would through the tomcat extension.  _NOTE: You can stop the topcat server from that same command line with kbd:[ctrl + c]_
-
-5. Go to the remote tab (on the left side) and go down to the forwarded ports panel.  Pick to have 8080 forwarded.  Then hit the globe icon to open a browser to that port.
-
+. Go to the remote tab (on the left side) and go down to the forwarded ports panel.  Pick to have 8080 forwarded.  Then hit the globe icon to open a browser to that port.
++
 image:../images/port-forward.png[]
-
-6. Notice that the welcome should show, but the image is incorrect
-
++
+. Notice that the welcome should show, but the image is incorrect
++
 image:../images/ugly-pet.png[]
-
-7. Correct the image by running the following from the base directory
-
++
+. Correct the image by running the following from the base directory
++
 ----
 example/change-pet-image.sh good-pets.png
 git commit -am"Fix pet image"
 git push git-codecommit.ap-southeast-2.amazonaws.com
 ----
-
++
 [NOTE]
 ====
 It might make sense to jump to the AWS pipeline and make sure the second checkin is paused by disabling one of the transitions that the first checkin has already been through.  You can do this by clicking on the transition and then giving a reason for disabling.
@@ -102,38 +102,35 @@ AWS Pipeline can be found link:https://ap-southeast-2.console.aws.amazon.com/cod
 
 Show the different aspects of the code pipeline
 
-1. Overall Pipeline
+. Overall Pipeline
 
-2. Pipeline build steps
-
+. Pipeline build steps
++
 in vscode, use kbd:[cmd + p] to quickly open buildspec.yaml
-
++
 image:../images/aws-buildspec.png[]
-
-2. Pipeline Unit Test
-
++
+. Pipeline Unit Test
++
 image:../images/pipeline-unittest.png[]
-
-3. Pipeline Deployment
++
+. Pipeline Deployment
 
 === Elastic Beanstalk ===
 
-1. Dashboard
-
-* point out the two different environments
-
-* Point out that each environment has a different URL
-
+. Dashboard
+** point out the two different environments
+** Point out that each environment has a different URL
++
 image:../images/aws-eb-dashboard.png[]
-
-2. Dev Configuration
-
++
+. Dev Configuration
++
 image:../images/aws-eb-configuration-overview.png[]
-
-3. Instances
-
-* point out that these are VMs that can be ssh'ed into
-
++
+. Instances
+** point out that these are VMs that can be ssh'ed into
++
 .From the ComparisonDemo shell
 ----
 eb ssh
@@ -155,35 +152,35 @@ on customizing your Elastic Beanstalk environment, see our documentation here:
 http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/customize-containers-ec2.html
 [ec2-user@ip-172-31-2-215 ~]$ 
 ----
-
-* point out the different security groups that are used to isolate the different bits
-
++
+** point out the different security groups that are used to isolate the different bits
++
 image:../images/aws-eb-instances.png[]
-
-3. Load Balancer
-
++
+. Load Balancer
++
 image:../images/aws-eb-loadbalancer.png[]
-
-3. RDS
-
++
+. RDS
++
 image:../images/aws-eb-rds.png[]
-
-4. If time allows, show the options that need to be choosen when creating a new environment
-
++
+. If time allows, show the options that need to be choosen when creating a new environment
++
 image:../images/aws-eb-new-env.png[]
-
-5. Finally, return to the pipeline and reject the bad image:
-
++
+. Finally, return to the pipeline and reject the bad image:
++
 image:../images/aws-pipeline-reject.png[]
-
-6. and then allow the previous change to flow through by re-enabling the pipeline
++
+. and then allow the previous change to flow through by re-enabling the pipeline
 
 == OpenShift: Development Environment Creation ==
 
 === Prerequisite: Introduction to Operators ===
 
-1. Start with the link:https://console-openshift-console.apps.comparison.openshifttc.com/dashboards[Dashboard of the cluster]
-
+. Start with the link:https://console-openshift-console.apps.comparison.openshifttc.com/dashboards[Dashboard of the cluster]
++
 image:../images/openshift-dashboard.png[]
 
 2. From the UI, opt to create our new project (which is the equivalent of an Elastic Beanstalk Environment for our purposes).
@@ -211,7 +208,7 @@ image:../images/operator-installed.png[]
 Switch to comparison demo vscode window (dark theme)
 ====
 
-2. Once the operator has been copied to our project, we are free to create the resources (CRD) that will create our cluster. Show the creation of a new MySQL cluster using the cluster YAML 
+. Once the operator has been copied to our project, we are free to create the resources (CRD) that will create our cluster. Show the creation of a new MySQL cluster using the cluster YAML 
 
 ** Hit kbd:[cmd+p] to quickly open `mysql-cluster-instance.yaml` and describe that this is all that is necessary to setup a database cluster on the kubernetes instance
 
@@ -225,7 +222,8 @@ oc new-project petclinic-dev
 $DEMO_HOME/scripts/create-sql-cluster.sh 
 ----
 
-Next, quickly show how the results of the command have caused creation in the UI:
++
+. Next, quickly show how the results of the command have caused creation in the UI:
 
 image:../images/operator-sql-creation.png[]
 
@@ -346,137 +344,155 @@ $DEMO_HOME/scripts/create-cicd.sh install --project-prefix petclinic --user USER
 
 === Openshift ===
 
-1. Point out the OpenShift Pipeline Operator
+. Point out the OpenShift Pipeline Operator
 
-2. Show the Pipeline overview
+. Show the Pipeline overview
 
-3. Talk about 
-    
-    * Tasks
-    * Trigger Events
-    * VS Code Extension
+. Talk about 
+** Tasks
+** Trigger Events
+** VS Code Extension
 
+[WARNING]
+====
+As of the writing of this, you cannot trigger a pipeline that requires a workspace from the UI.  Instead, you can create a pipeline run manually by applying this yaml:
+
+----
+oc apply -f $DEMO_HOME/kube/tekton/pipelinerun/petclinic-dev-pipeline-tomcat-run.yaml
+----
+
+This should trigger a pipeline run with the workspace properly configured.  If you then need to trigger the pipeline again, you can now use the UI if you go to the pipeline run in question, right-click, and choose _Rerun_
+
+image:../images/pipelines-manual-run.png[]
+
+====
 
 ==== Trigger build from external repo ====
 
-1. Get the URL of the trigger event
-
+. Get the URL of the trigger event
++
 ----
 echo "http://$(oc get route webhook-github -o jsonpath='{.spec.host}')/"
 ----
-
-1. Open the settings page of the github repo link:https://github.com/hatmarch/spring-framework-petclinic/settings/hooks/192601155[here]
-
-Update the webhook with the URL from above and activate it
-
++
+. Open the settings page of the github repo link:https://github.com/hatmarch/spring-framework-petclinic/settings/hooks/192601155[here]
++
+. Update the webhook with the URL from above and activate it
++
 image:../images/pipeline-github-webhook.png[]
-
++
 [ALERT]
 ====
 Switch to spring-petclinic-vscode window
 ====
-
-2. Make a change to the welcome.jsp
-
++
+. Make a change to the welcome.jsp
++
 ----
     <h3> Hello from OpenShift Pipelines </h3>
 ----
-
-3. [red]#Make sure the OpenShift Developer View of the Pipeline can be seen
-
++
+. [red]#Make sure the OpenShift Developer View of the Pipeline can be seen
++
 image:../images/developer-pipeline-run.png[]
-
-4. Then run the checkin command
-
++
+. Then run the checkin command
++
 ----
 git commit -am"Pipeline Message"
 git push origin
 ----
-
-5. Switch over to the OpenShift pipeline and notice its running
-
++
+. Switch over to the OpenShift pipeline and notice its running
++
 * Point out different phases from the UI
 ** Point out parallel analysis and unit test phases
 * Look at logs from console
 * from `ComparisonDemo` show the cli for tekton for follow the steps of the latest pipeline run
-
++
 ----
 tkn pr logs -L -f
 ----
-
-6. Play around with the existing petclinic app and show that it's not affected by the pipeline run
-
-* For demonstrating the environments are separate, add an Owner for the development environment
-
++
+. Play around with the existing petclinic app and show that it's not affected by the pipeline run
++
+** For demonstrating the environments are separate, add an Owner for the development environment
++
 image:../images/petclinic-add-owner.png[]
++
+. Tour the cicd project that we created
 
-6. Tour the cicd project that we created
-
-* Sonarqube: show the results of analysis by navigating to the endpoint
-
+** Sonarqube: show the results of analysis by navigating to the endpoint
++
 ----
 echo "https://$(oc get route sonarqube -o jsonpath='{.spec.host}' -n petclinic-cicd)/"
 ----
-
-* Internal Git Repo
-
++
+** Internal Git Repo
++
 ----
 echo "http://$(oc get route gogs -o jsonpath='{.spec.host}' -n petclinic-cicd)/"
 ----
-
-* Nexus Repository
-
++
+** Nexus Repository
++
 ----
 echo "http://$(oc get route nexus -o jsonpath='{.spec.host}' -n petclinic-cicd)/"
 ----
-
-NOTE: [blue]#Build will take about 10 minutes to complete# This is a good time to discuss that OpenShift can also integrate with Jenkins Pipeline and pass to Tyrell
-
-7. Upon return, show from the Dev Perspective that a new build has been released replacing the S2I one we uploaded before
-
-==== Staging Environment and Deployment ====
-
-Next we want to create a staging environment that will house our build.
-
-1. First show that the staging environment is empty.
-
-2. Create the new staging environment (noting that the MySQL operator is already installed there) using the following script
-
-----
-$DEMO_HOME/scripts/create-staging-full.sh
-----
++
+NOTE: [blue]#Build will take about 10 minutes to complete# This is a good time to discuss that OpenShift can also integrate with Jenkins Pipeline
++
+. Upon return, show from the Dev Perspective that a new build has been released replacing the S2I one we uploaded before
 
 ==== Trigger deployment from code pipeline? ====
 
-6. Once dev build is working, show that this can be deployed to staging by executing the deploy to staging pipeline
-
+. Once dev build is working, show that this can be deployed to staging by executing the deploy to staging pipeline
++
 ----
 tkn p start petclinic-deploy-stage-tomcat -n petclinic-cicd                                                          
 ? Value for param `IMAGE_TAG` of type `string`? (Default is `latest`) latest
 Pipelinerun started: petclinic-deploy-stage-tomcat-run-fhzh5
 ----
++
+Notice that this build will fail.  You can look for the error message in the UI or you can run this command in the shell
++
+----
+tkn pr logs -L
 
-Notice that this build will fail.  We need to create a staging environment first.  Show from the Dev Perspective that the staging environment is an empty shell
+# You will get error output that looks something like the following
+[promote-stage : run-commands] Error from server (NotFound): deploymentconfigs.apps.openshift.io "petclinic" not found
 
-7. Run the following command to finish building 
-
+failed to get logs for task promote-stage : container step-run-commands has failed  : [{"name":"","digest":"","key":"StartedAt","value":"2020-04-02T07:12:28Z","resourceRef":{}}]
+TaskRun petclinic-deploy-stage-tomcat-run-2tq5x-promote-stage-w72rp has failed
+----
++
+The issue is that *we need to create a full staging environment first.*  
++
+. Show from the Dev Perspective that the staging environment is an empty shell
++
+. Run the following command to finish building 
++
 ----
 $DEMO_HOME/scripts/create-staging-full.sh install -p petclinic
 ----
-
-Now this time attempt to trigger the pipeline from the UI.  Switch to the `petclinic-cicd` environment.  Select _Pipelines_ from the left panel then right click on ... and select start.  Indicate that the latest build is desired.
-
++
+WARNING: [blue]#This command will take a 2-5 minutes to complete#
++
+This time let's attempt to trigger the pipeline from the UI. 
++ 
+. Back on the OpenShift console, _Be sure to switch to the `petclinic-cicd` project_, and then select _Pipelines_ from the left panel.  Right click on ... and select start.  Indicate that the `latest` image tag is desired.
++
 image:../images/pipelines-deploy-to-staging-ui.png[]
-
-8. When the build completes, move to the petclinic-staging project and click the badge to open the staging website
-
++
+. When the build completes, move to the `petclinic-staging` project and click the badge to open the staging website
++
 image:../images/openshift-staging-badge.png[]
-
-9. Query the list of owners, and show that the one we created earlier is not there.
++
+. _To prove that we're looking at a different instance_: Query the list of owners, and show that the one we created earlier is not there.
 
 ==== Optional: Rollback with pipelines ====
 
-7. You can show rollback to a previous version by making sure that previous version is tagged as per <<Tagging,here>>
+You can show rollback to a previous version by making sure that previous version is tagged as per <<Tagging,here>>
 
 ----
 $ tkn p start petclinic-deploy-stage-tomcat -n petclinic-cicd                                                          
@@ -490,10 +506,10 @@ $ tkn pr logs -L -f -n petclinic-cicd
 
 ==== Optional: Trigger build from internal repo ====
 
-4. Point out internal git repo
+. Point out internal git repo
 
 
-== Monitoring Application ==
+== Monitoring Application [red]#(Unfinished)# ==
 
 === OpenShift ===
 
@@ -511,37 +527,37 @@ Equivalent would be CloudWatch
 
 === Debugging with Tomcat ===
 
-3. Add a tomcat server
-
+. Add a tomcat server
++
 NOTE: This section requires the use of the vscode extension `adashen.vscode-tomcat` and assumes you're running from within the `quay.io/mhildenb/comparison-demo-base:1.0` (dev) container
-
-* From the vscode file explorer, look for the tomcat panel and mouse over the _+_ button on the right
-
++
+. From the vscode file explorer, look for the tomcat panel and mouse over the _+_ button on the right
++
 image:../images/tomcat-add.png[]
-
-* Enter the tomcat directory when prompted: `/opt/webserver`
-
++
+. Enter the tomcat directory when prompted: `/opt/webserver`
++
 NOTE: If the tomcat server fails to appear, you can find some <<Troubleshooting Tomcat Server, troubleshooting steps here>> as well as a way to run the demo without the extension.
-
-4. Debug .war file by right clicking on the newly added tomcat server and selecting _Debug War Package_.  You should find the war in `target` subdirectory of the workspace.  Maven will also output where it put in the .war at the end of the `install` goal.
-
++
+. Debug .war file by right clicking on the newly added tomcat server and selecting _Debug War Package_.  You should find the war in `target` subdirectory of the workspace.  Maven will also output where it put in the .war at the end of the `install` goal.
++
 image:../images/tomcat-debug.png[]
 
 === Troubleshooting Tomcat Server ===
 
 If the tomcat extension fails to run, you can attempt the following:
 
-remote any old tomcat files
-
+. remote any old tomcat files
++
 ----
 rm -f /opt/webserver/webse*
 ----
-
-Attempt to readd tomcat to /opt/webserver per the instructions above
-
-if that still doesn't work, rebuild container.
-
-If all else fails, [blue]#you can run the tomcat server locally#.  
++
+. Attempt to readd tomcat to /opt/webserver per the instructions above
++
+. if that still doesn't work, rebuild container.
++
+. If all else fails, [blue]#you can run the tomcat server locally#.  
 
 === Initial Binary Build ===
 
@@ -568,22 +584,21 @@ oc start-build petclinic --from-file=target
 
 If you want to run from mysql locally, the MySQL profile expects to connect on docker.for.mac.localhost:3306.
 
-1. Build for MySQL: You'll need to use the `MySQL` profile
-
+. Build for MySQL: You'll need to use the `MySQL` profile
++
 ----
 ./mvnw package -PMySQL -DskipTests
 ----
-
-Then choose one of the following DB options:
-
-** Run from a docker container 
-
++
+. Then choose one of the following DB options:
+.. _OPTION 1:_ Run from a docker container 
++
 ----
 docker run --name mysql-petclinic -e MYSQL_ROOT_PASSWORD=petclinic -e MYSQL_DATABASE=petclinic -p 3306:3306 mysql:5.7.8
 ----
-
-** Run connected to the sqlserver in the dev directory
-
++
+.. _OPTION 2:_ Run connected to the sqlserver in the dev directory
++
 ----
 oc port-forward -n petclinic-dev svc/petclinic-sql 3306:3306
 ----
