@@ -117,7 +117,7 @@ command.install() {
   oc apply -f $DEMO_HOME/kube/tekton/pipelines/pipeline-pvc.yaml -n $cicd_prj
 
   info "Deploying dev and staging pipelines"
-  if [[ ! -z "$SKIP_STAGING_PIPELINE" ]]; then
+  if [[ -z "$SKIP_STAGING_PIPELINE" ]]; then
     oc process -f $DEMO_HOME/kube/tekton/pipelines/petclinic-stage-pipeline-tomcat-template.yaml -p PROJECT_NAME=$cicd_prj \
       -p DEVELOPMENT_PROJECT=$dev_prj -p STAGING_PROJECT=$stage_prj | oc apply -f - -n $cicd_prj
   else
@@ -126,11 +126,11 @@ command.install() {
   sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/pipelines/petclinic-dev-pipeline-tomcat.yaml | oc apply -f - -n $cicd_prj
   
   # Install pipeline resources
-  sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/resources/app-image.yaml | oc apply -f - -n $cicd_prj
+  sed "s/demo-dev/$dev_prj/g" $DEMO_HOME/kube/tekton/resources/petclinic-image.yaml | oc apply -f - -n $cicd_prj
   
   # FIXME: Decide which repo we want to trigger/pull from
-  # sed "s#https://github.com/spring-projects/spring-petclinic#http://$GOGS_HOSTNAME/gogs/spring-petclinic.git#g" $DEMO_HOME/kube/tekton/resources/app-git.yaml | oc apply -f - -n $cicd_prj
-  oc apply -f $DEMO_HOME/kube/tekton/resources/app-git.yaml
+  # sed "s#https://github.com/spring-projects/spring-petclinic#http://$GOGS_HOSTNAME/gogs/spring-petclinic.git#g" $DEMO_HOME/kube/tekton/resources/petclinic-git.yaml | oc apply -f - -n $cicd_prj
+  oc apply -f $DEMO_HOME/kube/tekton/resources/petclinic-git.yaml -n $cicd_prj
 
   # Install pipeline triggers
   oc apply -f $DEMO_HOME/kube/tekton/triggers -n $cicd_prj
@@ -143,12 +143,32 @@ command.install() {
   info "Configure nexus repo"
   $SCRIPT_DIR/util-config-nexus.sh -n $cicd_prj -u admin -p admin123
 
+  # Leave user in cicd project
+  oc project $cicd_prj
+
   cat <<-EOF
 
 ############################################################################
 ############################################################################
 
-  CI/CD project is installed! Give it a few minutes to finish deployments and then:
+  CI/CD project is installed! 
+
+  NOTE: Your pipeline cannot currently be run from the UI due to its reliance on a (maven) workspace.
+  Instead you must kick of your pipeline in one of the following ways:
+
+  A. File
+
+    1) oc apply -f $DEMO_HOME/kube/tekton/pipelinerun/petclinic-dev-pipeline-tomcat-run.yaml
+       - This will use the defined pipeline resources and the maven workspace
+  
+  B. Github Deploy
+
+    1) Get the github trigger address
+
+    2) Log into your github repo and update the settings to point to the webhook (see also
+       $DEMO_HOME/docs/Walkthrough.adoc)
+  
+  C. Gogs Deploy
 
   1) Go to spring-petclinic Git repository in Gogs:
      http://$GOGS_HOSTNAME/gogs/spring-petclinic.git
@@ -157,9 +177,9 @@ command.install() {
       
   3) Edit a file in the repository and commit to trigger the pipeline
 
-  4) Check the pipeline run logs in Dev Console or Tekton CLI:
+Finally, you can check the pipeline run logs in Dev Console or Tekton CLI:
      
-    \$ tkn pipeline logs petclinic-deploy-dev -f -n $cicd_prj
+    \$ tkn pipeline logs petclinic-dev-pipeline-tomcat -f -n $cicd_prj
 
 ############################################################################
 ############################################################################
