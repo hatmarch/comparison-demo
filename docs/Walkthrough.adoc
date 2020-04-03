@@ -1,9 +1,23 @@
 = Comparison Walkthrough =
 :experimental:
+:toc:
+:toclevels: 4
 
-Premise: You have a (petclinic) spring application that you need to  host in the cloud.  Let’s look at how different facets of this are done in AWS and then in OpenShift
+== Introduction ==
+[WARNING]
+====
+Make sure you run the following command before executing any of these commands.
 
-== Local creation ==
+----
+source scripts/shell-setup.sh 
+----
+====
+
+Premise: You have a (petclinic) spring application that you need to  host in the cloud.  Let’s look at how different facets of this are done in AWS and then in OpenShift.
+
+(See also <<../Readme.adoc#_introduction,Introduction>> set out in the link:README.adoc[])
+
+== Petclinic Running Locally ==
 
 Show our demo running locally 
 
@@ -96,7 +110,7 @@ image:../images/pause-pipeline.png[]
 AWS Pipeline can be found link:https://ap-southeast-2.console.aws.amazon.com/codesuite/codepipeline/pipelines/petclinic-pipeline/view?region=ap-southeast-2[here] ([red]#need to manually adjust this link#)
 ====
 
-== Touring AWS ==
+== Petclinic on AWS ==
 
 === Code Pipeline ===
 
@@ -177,6 +191,8 @@ image:../images/aws-pipeline-reject.png[]
 
 == OpenShift: Development Environment Creation ==
 
+When showing off concepts of OpenShift
+
 === Prerequisite: Introduction to Operators ===
 
 . Start with the link:https://console-openshift-console.apps.comparison.openshifttc.com/dashboards[Dashboard of the cluster]
@@ -209,41 +225,41 @@ Switch to comparison demo vscode window (dark theme)
 ====
 
 . Once the operator has been copied to our project, we are free to create the resources (CRD) that will create our cluster. Show the creation of a new MySQL cluster using the cluster YAML 
-
++
 ** Hit kbd:[cmd+p] to quickly open `mysql-cluster-instance.yaml` and describe that this is all that is necessary to setup a database cluster on the kubernetes instance
-
++
 image:../images/mysql-cluster-instance.png[]
-
-Possibly also show the cluster creation script before issuing.  Then issue the command:
-
++
+Possibly also show the cluster creation script before issuing.  
++
+. Next issue the command:
++
 ----
 # create the project if you haven't already, otherwise use oc project petclinic-dev
 oc new-project petclinic-dev
 $DEMO_HOME/scripts/create-sql-cluster.sh 
 ----
-
 +
 . Next, quickly show how the results of the command have caused creation in the UI:
-
++
 image:../images/operator-sql-creation.png[]
-
++
 _While waiting for the creation of the MySQL cluster, move on to the build_
-
++
 [ALERT]
 ==== 
 Switch to spring-petclinic vscode window
 ====
-
-3. Create from template 
-
-* mention that this could be done from templates if we weren't worried about ongoing maintainance of the database
-
-Open the _Developer Perspective_ in the _petclinic-dev_ project and click the _+_ button.  Then select _From Catalog_
-
++
+. Create from template 
+** mention that this could be done from templates if we weren't worried about ongoing maintainance of the database
++
+.. Open the _Developer Perspective_ in the _petclinic-dev_ project and click the _+_ button.  Then select _From Catalog_
++
 image:../images/dev-from-catalog.png[]
-
++
 image:../images/dev-tomcat-template.png[]
-
++
 WARNING: Be sure to select the *Tomcat 8* template.  Tomcat 7 will definitely not work properly.
 
 ==== Install based on S2I ====
@@ -257,7 +273,7 @@ oc new-app --template=jws31-tomcat8-basic-s2i --param=SOURCE_REPOSITORY_URL='htt
 
 NOTE: If you want to install based entirely on a binary build and skip the UI template part, see <<Initial Binary Build,instructions in Appendix>>
 
-4. Then can show the logs of the S2I running using this command (or finding from the UI)
+You can show the logs of the S2I running using this command (or finding from the UI)
 
 ----
 oc logs -f bc/petclinic
@@ -277,7 +293,7 @@ Also consider showing the _Build Overview_ from the *Developer Perspective*
 
 image:../images/build-overview.png[]
 
-5. Build will take some amount of time [blue]#S2I takes about 10 minutes#
+Build will take some amount of time [blue]#S2I takes about 10 minutes# and in the meantime can show off:
 
 * Can show that the SQL cluster is there waiting
 * Show the developer perspective
@@ -315,7 +331,7 @@ image:../images/dev-more-pods.png[]
 
 And see how those additional pods are referenced from the `service`
 
-=== Tagging ===
+=== Tagging a Build ===
 
 Finally, for the sake of rollback later on, we're going to tag the current build *BEFORE* we start our pipeline.
 
@@ -323,7 +339,7 @@ Finally, for the sake of rollback later on, we're going to tag the current build
 oc tag petclinic:latest petclinic:1.0 -n petclinic-dev
 ----
 
-== Continuous Integration ==
+== Openshift: Continuous Integration with Pipelines ==
 
 [ALERT]
 ====
@@ -342,7 +358,7 @@ $DEMO_HOME/scripts/create-cicd.sh install --project-prefix petclinic --user USER
 
 ====
 
-=== Openshift ===
+=== OpenShift Pipeline Operator and Overview ===
 
 . Point out the OpenShift Pipeline Operator
 
@@ -367,7 +383,7 @@ image:../images/pipelines-manual-run.png[]
 
 ====
 
-==== Trigger build from external repo ====
+=== Trigger build from external repo ===
 
 . Get the URL of the trigger event
 +
@@ -444,7 +460,19 @@ NOTE: [blue]#Build will take about 10 minutes to complete# This is a good time t
 +
 . Upon return, show from the Dev Perspective that a new build has been released replacing the S2I one we uploaded before
 
-==== Trigger deployment from code pipeline? ====
+==== Optional: Trigger build from internal repo ====
+
+. Point out internal git repo
+. Log in as administrator (gogs/gogs)
+. Go to _Settings_ for the petclinic repo and enter this service (since this is all cluster local) that represents a gogs compatible Tekton/OpenShift Pipeline trigger
++
+----
+el-webhook.petclinic-cicd.svc.cluster.local:8080
+----
++
+. Open a file in gogs (such as welcome.jsp) and use the pen icon to edit it locally and check in (to trigger a build)
+
+=== Deploy to Staging ===
 
 . Once dev build is working, show that this can be deployed to staging by executing the deploy to staging pipeline
 +
@@ -490,7 +518,7 @@ image:../images/openshift-staging-badge.png[]
 +
 . _To prove that we're looking at a different instance_: Query the list of owners, and show that the one we created earlier is not there.
 
-==== Optional: Rollback with pipelines ====
+=== Optional: Rollback with pipelines ===
 
 You can show rollback to a previous version by making sure that previous version is tagged as per <<Tagging,here>>
 
@@ -503,11 +531,6 @@ In order to track the pipelinerun progress run:
 tkn pipelinerun logs petclinic-deploy-stage-tomcat-run-fhzh5 -f -n petclinic-cicd
 $ tkn pr logs -L -f -n petclinic-cicd   
 ----
-
-==== Optional: Trigger build from internal repo ====
-
-. Point out internal git repo
-
 
 == Monitoring Application [red]#(Unfinished)# ==
 
@@ -537,27 +560,11 @@ image:../images/tomcat-add.png[]
 +
 . Enter the tomcat directory when prompted: `/opt/webserver`
 +
-NOTE: If the tomcat server fails to appear, you can find some <<Troubleshooting Tomcat Server, troubleshooting steps here>> as well as a way to run the demo without the extension.
+NOTE: If the tomcat server fails to appear, you can find some <<../Readme.adoc#_troubleshooting_local_tomcat_server,troubleshooting steps here>> as well as a way to run the demo without the extension.
 +
 . Debug .war file by right clicking on the newly added tomcat server and selecting _Debug War Package_.  You should find the war in `target` subdirectory of the workspace.  Maven will also output where it put in the .war at the end of the `install` goal.
 +
 image:../images/tomcat-debug.png[]
-
-=== Troubleshooting Tomcat Server ===
-
-If the tomcat extension fails to run, you can attempt the following:
-
-. remote any old tomcat files
-+
-----
-rm -f /opt/webserver/webse*
-----
-+
-. Attempt to readd tomcat to /opt/webserver per the instructions above
-+
-. if that still doesn't work, rebuild container.
-+
-. If all else fails, [blue]#you can run the tomcat server locally#.  
 
 === Initial Binary Build ===
 
