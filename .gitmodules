@@ -2,7 +2,3 @@
 	path = spring-framework-petclinic
 	url = https://github.com/hatmarch/spring-framework-petclinic.git
 	branch = spring-5.2.0
-[submodule "operators/mysql-operator"]
-	path = operators/mysql-operator
-	url = https://github.com/oracle/mysql-operator.git
-	branch = master
