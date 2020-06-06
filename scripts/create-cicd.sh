@@ -93,9 +93,9 @@ command.install() {
   oc get ns $cicd_prj 2>/dev/null  || { 
     oc new-project $cicd_prj 
   }
-  # oc get ns $dev_prj 2>/dev/null  || { 
-  #   oc new-project $dev_prj
-  #}
+  oc get ns $dev_prj 2>/dev/null  || { 
+    oc new-project $dev_prj
+  }
   oc get ns $stage_prj 2>/dev/null  || { 
     oc new-project $stage_prj 
   }
